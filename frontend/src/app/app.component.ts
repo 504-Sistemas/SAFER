@@ -52,6 +52,15 @@ export class AppComponent implements OnInit {
   loading = false;
   errorMessage = '';
 
+  // Progressive disclosure UI toggles
+  showParcelMeta = false;
+  showPriorities = false;
+  showClimateDetails = false;
+  showRainChart = false;
+  showPestAndAlerts = false;
+  showScenarioInsight = false;
+  expandedRotationRanks = new Set<number>();
+
   // Interactive precipitation explorer
   availableYears = [2025, 2024, 2023, 2022, 2021, 2020];
   selectedPrecipYear: number | 'CLIM' = 'CLIM';
@@ -149,6 +158,7 @@ export class AppComponent implements OnInit {
         this.displayedMonthlyProfile = res.earthObservations.climate.monthlyProfile;
         this.selectedMonthDetail = null;
         this.selectedMonthNumber = null;
+        this.expandedRotationRanks.clear();
         this.loading = false;
       },
       error: (err) => {
@@ -160,6 +170,19 @@ export class AppComponent implements OnInit {
 
   selectRotation(rank: number): void {
     this.selectedRotationRank = rank;
+  }
+
+  toggleRotationDetails(rank: number, event: Event): void {
+    event.stopPropagation();
+    if (this.expandedRotationRanks.has(rank)) {
+      this.expandedRotationRanks.delete(rank);
+    } else {
+      this.expandedRotationRanks.add(rank);
+    }
+  }
+
+  isRotationExpanded(rank: number): boolean {
+    return this.expandedRotationRanks.has(rank);
   }
 
   get selectedRotation() {

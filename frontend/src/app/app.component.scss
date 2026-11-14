@@ -984,3 +984,159 @@
   text-align: center;
   padding: 48px 24px;
 }
+
+/* Progressive disclosure & compact UI styles */
+.btn-link-toggle {
+  background: transparent;
+  border: none;
+  color: var(--nasa-blue);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.parcel-meta-row {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.compact-hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.quick-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8faf9;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.details-toggle-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.btn-detail-toggle {
+  background: #f8faf9;
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: var(--nasa-blue);
+    color: var(--nasa-blue);
+  }
+
+  &.active {
+    background: var(--nasa-blue);
+    color: #fff;
+    border-color: var(--nasa-blue);
+  }
+}
+
+.collapsible-panel {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+
+.water-balance-note {
+  background: #f8faf9;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+
+  strong {
+    color: var(--text-main);
+  }
+}
+
+.crop-flow-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 6px;
+}
+
+.crop-flow-pill {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+
+  small {
+    color: var(--accent);
+    font-weight: 700;
+    margin-right: 4px;
+  }
+}
+
+.crop-flow-arrow {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.rec-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.rec-expanded-body {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.scenario-insight-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.water-mm-detail {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
