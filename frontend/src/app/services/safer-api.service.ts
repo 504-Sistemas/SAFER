@@ -15,7 +15,11 @@ import {
 })
 export class SaferApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api';
+  private readonly baseUrl =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? '/api'
+      : 'https://safer-api.onrender.com/api';
 
   listSampleParcels(): Observable<string[]> {
     return this.http.get<string[]>(`${this.baseUrl}/parcel/samples`);
