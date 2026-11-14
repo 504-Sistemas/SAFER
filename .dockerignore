@@ -1,0 +1,7 @@
+.git
+.gitignore
+frontend/
+backend/.vs/
+backend/**/bin/
+backend/**/obj/
+**/*.user

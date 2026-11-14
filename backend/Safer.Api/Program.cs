@@ -9,13 +9,31 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache();
 
+var allowedOrigins = new List<string> { "http://localhost:4200", "https://localhost:4200" };
+var frontendUrl = builder.Configuration["FRONTEND_URL"];
+if (!string.IsNullOrWhiteSpace(frontendUrl))
+{
+    allowedOrigins.AddRange(
+        frontendUrl.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                   .Select(u => u.TrimEnd('/')));
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularDev", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        if (allowedOrigins.Contains("*"))
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else
+        {
+            policy.WithOrigins(allowedOrigins.ToArray())
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
     });
 });
 
@@ -35,10 +53,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseHttpsRedirection();
 }
 
 app.UseCors("AngularDev");
-app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
