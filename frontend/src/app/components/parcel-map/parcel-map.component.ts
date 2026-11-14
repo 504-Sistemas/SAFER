@@ -8,11 +8,13 @@ import {
   OnDestroy,
   Output,
   SimpleChanges,
-  ViewChild
+  ViewChild,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { ParsedParcelDto } from '../../models/safer.models';
+import { I18nService } from '../../services/i18n.service';
 
 @Component({
   selector: 'app-parcel-map',
@@ -23,37 +25,37 @@ import { ParsedParcelDto } from '../../models/safer.models';
       <div class="map-toolbar">
         <div class="toolbar-group">
           <button type="button" class="chip" [class.active]="baseMode === 'satellite'" (click)="setBaseLayer('satellite')">
-            Satélite
+            {{ i18n.t('Satélite', 'Satellite') }}
           </button>
           <button type="button" class="chip" [class.active]="baseMode === 'osm'" (click)="setBaseLayer('osm')">
-            Mapa de Calles
+            {{ i18n.t('Mapa de Calles', 'Street Map') }}
           </button>
           <button type="button" class="chip nasa" [class.active]="gibsLayer === 'ndvi'" (click)="toggleGibs('ndvi')">
-            Verdor del Cultivo
+            {{ i18n.t('Verdor del Cultivo', 'Crop Greenness (NDVI)') }}
           </button>
           <button type="button" class="chip nasa" [class.active]="gibsLayer === 'rain'" (click)="toggleGibs('rain')">
-            Lluvia Satelital
+            {{ i18n.t('Lluvia Satelital', 'Satellite Rain') }}
           </button>
           <button type="button" class="chip nasa" [class.active]="gibsLayer === 'lst'" (click)="toggleGibs('lst')">
-            Calor del Suelo
+            {{ i18n.t('Calor del Suelo', 'Soil Heat (LST)') }}
           </button>
           <button type="button" class="chip nasa" [class.active]="gibsLayer === 'smap'" (click)="toggleGibs('smap')">
-            Humedad del Suelo
+            {{ i18n.t('Humedad del Suelo', 'Soil Moisture (SMAP)') }}
           </button>
         </div>
 
         <div class="toolbar-group">
           @if (!isDrawing) {
             <button type="button" class="chip draw" (click)="startDrawing()">
-              + Dibujar Finca
+              {{ i18n.t('+ Dibujar Finca', '+ Draw Farm') }}
             </button>
           } @else {
-            <span class="draw-hint">Clic en mapa ({{ drawPoints.length }} pts)</span>
+            <span class="draw-hint">{{ i18n.t('Clic en mapa', 'Click map') }} ({{ drawPoints.length }} pts)</span>
             <button type="button" class="chip finish" [disabled]="drawPoints.length < 3" (click)="finishDrawing()">
-              Cerrar Polígono
+              {{ i18n.t('Cerrar Polígono', 'Finish Polygon') }}
             </button>
             <button type="button" class="chip cancel" (click)="cancelDrawing()">
-              Cancelar
+              {{ i18n.t('Cancelar', 'Cancel') }}
             </button>
           }
         </div>
@@ -135,6 +137,7 @@ import { ParsedParcelDto } from '../../models/safer.models';
   `]
 })
 export class ParcelMapComponent implements AfterViewInit, OnChanges, OnDestroy {
+  readonly i18n = inject(I18nService);
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef<HTMLDivElement>;
   @Input() parcel: ParsedParcelDto | null = null;
   @Output() drawnGeoJson = new EventEmitter<string>();

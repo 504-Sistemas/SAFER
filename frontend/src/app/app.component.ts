@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SaferApiService } from './services/safer-api.service';
+import { I18nService } from './services/i18n.service';
 import { ParcelMapComponent } from './components/parcel-map/parcel-map.component';
 import { FarmTwin3dComponent } from './components/farm-twin-3d/farm-twin-3d.component';
 import {
@@ -23,6 +24,7 @@ import {
 })
 export class AppComponent implements OnInit {
   private readonly api = inject(SaferApiService);
+  readonly i18n = inject(I18nService);
 
   sampleFiles: string[] = [];
   selectedSample = '';

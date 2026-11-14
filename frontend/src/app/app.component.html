@@ -1,11 +1,15 @@
 <div class="app-shell">
   <header class="topbar">
     <div class="brand">
-      <span class="badge-nasa">DATOS SATELITALES DE LA NASA</span>
-      <h1>SAFER · Asistente de Siembra y Rotación para tu Finca</h1>
+      <span class="badge-nasa">{{ i18n.t('DATOS SATELITALES DE LA NASA', 'NASA SATELLITE DATA') }}</span>
+      <h1>{{ i18n.t('SAFER · Asistente de Siembra y Rotación para tu Finca', 'SAFER · Smart Crop Rotation & Climate Assistant') }}</h1>
     </div>
 
     <div class="sample-actions">
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" class="btn-lang" [class.active]="i18n.lang === 'es'" (click)="i18n.setLang('es')">ES</button>
+        <button type="button" class="btn-lang" [class.active]="i18n.lang === 'en'" (click)="i18n.setLang('en')">EN</button>
+      </div>
       @for (sample of sampleFiles; track sample) {
         <button
           type="button"
@@ -17,7 +21,7 @@
         </button>
       }
       <label class="btn-upload">
-        Subir .KML
+        {{ i18n.t('Subir .KML', 'Upload .KML') }}
         <input type="file" accept=".kml" (change)="onKmlFileSelected($event)" hidden />
       </label>
     </div>
@@ -32,7 +36,7 @@
     <section class="left-col">
       <div class="card">
         <div class="card-header">
-          <h2>1. Tu Finca o Terreno</h2>
+          <h2>{{ i18n.t('1. Tu Finca o Terreno', '1. Your Farm / Parcel') }}</h2>
           @if (parcel) {
             <span class="pill-area">{{ parcel.name }} · {{ parcel.areaHectares }} ha</span>
           }
@@ -43,13 +47,13 @@
         @if (parcel) {
           <div class="parcel-meta-row">
             <button type="button" class="btn-link-toggle" (click)="showParcelMeta = !showParcelMeta">
-              {{ showParcelMeta ? 'Ocultar ubicación técnica' : 'Ver ubicación exacta' }}
+              {{ showParcelMeta ? i18n.t('Ocultar ubicación técnica', 'Hide technical coordinates') : i18n.t('Ver ubicación exacta', 'Show exact coordinates') }}
             </button>
           </div>
           @if (showParcelMeta) {
             <div class="parcel-meta">
-              <span><strong>Ubicación:</strong> {{ parcel.centroid.latitude }}, {{ parcel.centroid.longitude }}</span>
-              <span><strong>Archivo:</strong> {{ parcel.sourceFormat }}</span>
+              <span><strong>{{ i18n.t('Ubicación:', 'Location:') }}</strong> {{ parcel.centroid.latitude }}, {{ parcel.centroid.longitude }}</span>
+              <span><strong>{{ i18n.t('Archivo:', 'Format:') }}</strong> {{ parcel.sourceFormat }}</span>
             </div>
           }
         }
@@ -57,18 +61,18 @@
 
       <div class="card">
         <div class="card-header">
-          <h2>2. Tu Tierra y Cultivo Actual</h2>
+          <h2>{{ i18n.t('2. Tu Tierra y Cultivo Actual', '2. Soil Profile & Current Crop') }}</h2>
           <label class="toggle-inline">
             <input type="checkbox" [(ngModel)]="useSoilOverrides" />
-            Editar datos de mi tierra
+            {{ i18n.t('Editar datos de mi tierra', 'Edit soil data') }}
           </label>
         </div>
 
         <div class="form-row">
-          <label>¿Qué siembras normalmente aquí?</label>
+          <label>{{ i18n.t('¿Qué siembras normalmente aquí?', 'What do you normally grow here?') }}</label>
           <select [(ngModel)]="baselineCropId">
             @for (crop of crops; track crop.id) {
-              <option [value]="crop.id">{{ crop.name }}</option>
+              <option [value]="crop.id">{{ i18n.tr(crop.name) }}</option>
             }
           </select>
         </div>
@@ -76,28 +80,28 @@
         @if (useSoilOverrides) {
           <div class="soil-grid">
             <div class="form-row">
-              <label>Tipo de tierra</label>
+              <label>{{ i18n.t('Tipo de tierra', 'Soil texture') }}</label>
               <select [(ngModel)]="soilOverrides.textureClass">
-                <option value="Franco">Tierra suelta (Franco)</option>
-                <option value="Franco Arcilloso">Mezcla tierra y barro</option>
-                <option value="Franco Arenoso">Tierra arenosa</option>
-                <option value="Arcilloso">Tierra barrosa / pesada</option>
+                <option value="Franco">{{ i18n.t('Tierra suelta (Franco)', 'Loam') }}</option>
+                <option value="Franco Arcilloso">{{ i18n.t('Mezcla tierra y barro', 'Clay Loam') }}</option>
+                <option value="Franco Arenoso">{{ i18n.t('Tierra arenosa', 'Sandy Loam') }}</option>
+                <option value="Arcilloso">{{ i18n.t('Tierra barrosa / pesada', 'Clay') }}</option>
               </select>
             </div>
             <div class="form-row">
-              <label>Acidez de la tierra (pH)</label>
+              <label>{{ i18n.t('Acidez de la tierra (pH)', 'Soil pH') }}</label>
               <input type="number" step="0.1" min="4" max="9" [(ngModel)]="soilOverrides.ph" />
             </div>
             <div class="form-row">
-              <label>Abono natural en tierra (%)</label>
+              <label>{{ i18n.t('Abono natural en tierra (%)', 'Organic carbon (%)') }}</label>
               <input type="number" step="0.1" min="0.2" max="8" [(ngModel)]="soilOverrides.organicCarbonPct" />
             </div>
             <div class="form-row">
-              <label>¿Cómo filtra el agua?</label>
+              <label>{{ i18n.t('¿Cómo filtra el agua?', 'Soil drainage') }}</label>
               <select [(ngModel)]="soilOverrides.drainage">
-                <option value="Buen drenaje">Bueno (no se encharca)</option>
-                <option value="Drenaje normal">Normal</option>
-                <option value="Se encharca fácil">Se encharca fácil</option>
+                <option value="Buen drenaje">{{ i18n.t('Bueno (no se encharca)', 'Well drained') }}</option>
+                <option value="Drenaje normal">{{ i18n.t('Normal', 'Normal drainage') }}</option>
+                <option value="Se encharca fácil">{{ i18n.t('Se encharca fácil', 'Poorly drained') }}</option>
               </select>
             </div>
           </div>
@@ -106,21 +110,21 @@
 
       <div class="card">
         <div class="card-header">
-          <h2>3. Tus Prioridades</h2>
+          <h2>{{ i18n.t('3. Tus Prioridades', '3. Your Priorities') }}</h2>
           <button type="button" class="btn-link-toggle" (click)="showPriorities = !showPriorities">
-            {{ showPriorities ? 'Ocultar ajustes' : 'Ajustar prioridades' }}
+            {{ showPriorities ? i18n.t('Ocultar ajustes', 'Hide settings') : i18n.t('Ajustar prioridades', 'Adjust priorities') }}
           </button>
         </div>
 
         @if (!showPriorities) {
-          <p class="compact-hint">Usando prioridades recomendadas (ahorro de agua, salud del suelo y estabilidad).</p>
+          <p class="compact-hint">{{ i18n.t('Usando prioridades recomendadas (ahorro de agua, salud del suelo y estabilidad).', 'Using recommended weights (water conservation, soil health & stability).') }}</p>
         }
 
         @if (showPriorities) {
           <div class="sliders">
             <div class="slider-item">
               <div class="slider-label">
-                <span>Ahorrar agua</span>
+                <span>{{ i18n.t('Ahorrar agua', 'Save water') }}</span>
                 <strong>{{ priorities.waterConservation }}%</strong>
               </div>
               <input type="range" min="0" max="100" [(ngModel)]="priorities.waterConservation" />
@@ -128,7 +132,7 @@
 
             <div class="slider-item">
               <div class="slider-label">
-                <span>Cuidar y abonar la tierra</span>
+                <span>{{ i18n.t('Cuidar y abonar la tierra', 'Soil health & fertility') }}</span>
                 <strong>{{ priorities.soilHealth }}%</strong>
               </div>
               <input type="range" min="0" max="100" [(ngModel)]="priorities.soilHealth" />
@@ -136,7 +140,7 @@
 
             <div class="slider-item">
               <div class="slider-label">
-                <span>Evitar plagas sin tanto químico</span>
+                <span>{{ i18n.t('Evitar plagas sin tanto químico', 'Natural pest control') }}</span>
                 <strong>{{ priorities.pestControl }}%</strong>
               </div>
               <input type="range" min="0" max="100" [(ngModel)]="priorities.pestControl" />
@@ -144,7 +148,7 @@
 
             <div class="slider-item">
               <div class="slider-label">
-                <span>Cuidar tus ganancias</span>
+                <span>{{ i18n.t('Cuidar tus ganancias', 'Economic stability') }}</span>
                 <strong>{{ priorities.economicStability }}%</strong>
               </div>
               <input type="range" min="0" max="100" [(ngModel)]="priorities.economicStability" />
@@ -152,7 +156,7 @@
 
             <div class="slider-item">
               <div class="slider-label">
-                <span>Proteger la cosecha del clima extremo</span>
+                <span>{{ i18n.t('Proteger la cosecha del clima extremo', 'Climate resilience') }}</span>
                 <strong>{{ priorities.climateResilience }}%</strong>
               </div>
               <input type="range" min="0" max="100" [(ngModel)]="priorities.climateResilience" />
@@ -161,7 +165,7 @@
         }
 
         <button type="button" class="btn-primary" [disabled]="loading || !parcel" (click)="runAnalysis()">
-          {{ loading ? 'Consultando clima y satélites...' : 'Analizar mi Finca y Recomendar Siembras' }}
+          {{ loading ? i18n.t('Consultando clima y satélites...', 'Querying NASA satellites & climate...') : i18n.t('Analizar mi Finca y Recomendar Siembras', 'Analyze Farm & Recommend Rotations') }}
         </button>
       </div>
     </section>
@@ -172,8 +176,8 @@
         <div class="loading-banner" role="status" aria-live="polite">
           <div class="spinner"></div>
           <div>
-            <strong>Cargando datos satelitales NASA para {{ parcel?.name || 'tu finca' }}...</strong>
-            <small>Consultando precipitación (NASA POWER), escenas Sentinel-2, suelo y riesgo climático.</small>
+            <strong>{{ i18n.t('Cargando datos satelitales NASA para', 'Loading NASA satellite data for') }} {{ parcel?.name || i18n.t('tu finca', 'your farm') }}...</strong>
+            <small>{{ i18n.t('Consultando precipitación (NASA POWER), escenas Sentinel-2, suelo y riesgo climático.', 'Querying NASA POWER precipitation, Sentinel-2 imagery, soil & climate risk.') }}</small>
           </div>
         </div>
       }
@@ -182,38 +186,38 @@
         <!-- NASA Earth Observations -->
         <div class="card">
           <div class="card-header">
-            <h2>Cómo está el Clima y la Tierra de tu Finca</h2>
+            <h2>{{ i18n.t('Cómo está el Clima y la Tierra de tu Finca', 'Farm Climate & Soil Diagnostics') }}</h2>
             <span class="badge-live" [class.offline]="!res.earthObservations.climate.isLiveApi">
-              {{ res.earthObservations.climate.isLiveApi ? 'Datos NASA actualizados' : 'Datos de respaldo' }}
+              {{ res.earthObservations.climate.isLiveApi ? i18n.t('Datos NASA actualizados', 'Live NASA Data') : i18n.t('Datos de respaldo', 'Fallback Data') }}
             </span>
           </div>
 
           <div class="kpi-grid">
             <div class="kpi">
-              <span class="kpi-label">Lluvia anual</span>
+              <span class="kpi-label">{{ i18n.t('Lluvia anual', 'Annual Rainfall') }}</span>
               <strong>{{ res.earthObservations.climate.annualPrecipitationMm }} mm</strong>
-              <small>{{ (res.earthObservations.climate.annualWaterBalanceMm ?? 0) >= 0 ? 'Balance favorable' : 'Balance seco' }}</small>
+              <small>{{ (res.earthObservations.climate.annualWaterBalanceMm ?? 0) >= 0 ? i18n.t('Balance favorable', 'Water surplus') : i18n.t('Balance seco', 'Water deficit') }}</small>
             </div>
             <div class="kpi">
-              <span class="kpi-label">Temperatura media</span>
+              <span class="kpi-label">{{ i18n.t('Temperatura media', 'Mean Temperature') }}</span>
               <strong>{{ res.earthObservations.climate.meanTemperatureC }}°C</strong>
-              <small>Máx. {{ res.earthObservations.climate.maxTemperatureC }}°C</small>
+              <small>{{ i18n.t('Máx.', 'Max.') }} {{ res.earthObservations.climate.maxTemperatureC }}°C</small>
             </div>
             <div class="kpi">
-              <span class="kpi-label">Riesgo de falta de agua</span>
+              <span class="kpi-label">{{ i18n.t('Riesgo de falta de agua', 'Water Deficit Risk') }}</span>
               <strong
                 class="risk-val"
                 [class.risk-low]="res.earthObservations.climate.waterDeficitRisk === 'Riesgo Bajo' || res.earthObservations.climate.waterDeficitRisk === 'Low'"
                 [class.risk-medium]="res.earthObservations.climate.waterDeficitRisk === 'Riesgo Medio' || res.earthObservations.climate.waterDeficitRisk === 'Moderate'"
                 [class.risk-high]="res.earthObservations.climate.waterDeficitRisk === 'Riesgo Alto' || res.earthObservations.climate.waterDeficitRisk === 'High'">
-                {{ res.earthObservations.climate.waterDeficitRisk }}
+                {{ i18n.tr(res.earthObservations.climate.waterDeficitRisk) }}
               </strong>
-              <small>Verdor: {{ (res.earthObservations.estimatedNdviBaseline * 100) | number:'1.0-0' }}%</small>
+              <small>{{ i18n.t('Verdor:', 'Greenness (NDVI):') }} {{ (res.earthObservations.estimatedNdviBaseline * 100) | number:'1.0-0' }}%</small>
             </div>
             <div class="kpi">
-              <span class="kpi-label">Tu Tierra</span>
-              <strong>{{ res.soil.textureClass }}</strong>
-              <small>pH {{ res.soil.ph }} · {{ res.soil.drainage }}</small>
+              <span class="kpi-label">{{ i18n.t('Tu Tierra', 'Soil Profile') }}</span>
+              <strong>{{ i18n.tr(res.soil.textureClass) }}</strong>
+              <small>pH {{ res.soil.ph }} · {{ i18n.tr(res.soil.drainage) }}</small>
             </div>
           </div>
 
@@ -221,37 +225,37 @@
           <div class="quick-status-row">
             @if (res.earthObservations.terrain; as terr) {
               <span class="status-chip">
-                Deslave:
+                {{ i18n.t('Deslave:', 'Erosion:') }}
                 <strong
                   [class.risk-low]="terr.erosionRisk === 'Bajo'"
                   [class.risk-medium]="terr.erosionRisk === 'Moderado'"
                   [class.risk-high]="terr.erosionRisk === 'Alto'">
-                  {{ terr.erosionRisk }}
+                  {{ i18n.tr(terr.erosionRisk) }}
                 </strong>
               </span>
             }
             @if (res.earthObservations.pestRisk; as pest) {
               <span class="status-chip">
-                Riesgo hongos:
+                {{ i18n.t('Riesgo hongos:', 'Fungal risk:') }}
                 <strong
                   [class.risk-low]="pest.fungalDiseaseRisk === 'Bajo'"
                   [class.risk-medium]="pest.fungalDiseaseRisk === 'Moderado'"
                   [class.risk-high]="pest.fungalDiseaseRisk === 'Alto'">
-                  {{ pest.fungalDiseaseRisk }}
+                  {{ i18n.tr(pest.fungalDiseaseRisk) }}
                 </strong>
               </span>
               <span class="status-chip">
-                Insectos:
+                {{ i18n.t('Insectos:', 'Insects:') }}
                 <strong
                   [class.risk-low]="pest.insectPestRisk === 'Bajo'"
                   [class.risk-medium]="pest.insectPestRisk === 'Moderado'"
                   [class.risk-high]="pest.insectPestRisk === 'Alto'">
-                  {{ pest.insectPestRisk }}
+                  {{ i18n.tr(pest.insectPestRisk) }}
                 </strong>
               </span>
             }
             <span class="status-chip">
-              Alertas cercanas: <strong>{{ res.earthObservations.regionalExtremeEvents.length }}</strong>
+              {{ i18n.t('Alertas cercanas:', 'Nearby alerts:') }} <strong>{{ res.earthObservations.regionalExtremeEvents.length }}</strong>
             </span>
           </div>
 
@@ -262,14 +266,14 @@
               class="btn-detail-toggle"
               [class.active]="showRainChart"
               (click)="showRainChart = !showRainChart">
-              {{ showRainChart ? 'Ocultar gráfico de lluvias' : 'Ver gráfico de lluvias por mes' }}
+              {{ showRainChart ? i18n.t('Ocultar gráfico de lluvias', 'Hide monthly rain chart') : i18n.t('Ver gráfico de lluvias por mes', 'Show monthly rain chart') }}
             </button>
             <button
               type="button"
               class="btn-detail-toggle"
               [class.active]="showClimateDetails"
               (click)="showClimateDetails = !showClimateDetails">
-              {{ showClimateDetails ? 'Ocultar detalles y alertas' : 'Ver detalles técnicos, alertas y plagas' }}
+              {{ showClimateDetails ? i18n.t('Ocultar detalles y alertas', 'Hide technical details & alerts') : i18n.t('Ver detalles técnicos, alertas y plagas', 'Show technical details, alerts & pests') }}
             </button>
           </div>
 
@@ -278,23 +282,23 @@
             <div class="chart-section collapsible-panel">
               <div class="chart-header-row">
                 <div>
-                  <h3>¿Cuándo llueve más en tu finca?</h3>
+                  <h3>{{ i18n.t('¿Cuándo llueve más en tu finca?', 'Monthly Precipitation Profile (NASA POWER)') }}</h3>
                   <span class="chart-region-tag">
-                    Datos de tu zona: <strong>{{ res.parcel.name }}</strong>
+                    {{ i18n.t('Datos de tu zona:', 'Location data:') }} <strong>{{ res.parcel.name }}</strong>
                     ({{ res.earthObservations.climate.latitude | number:'1.4-4' }}°, {{ res.earthObservations.climate.longitude | number:'1.4-4' }}°)
                   </span>
                 </div>
                 <div class="year-picker">
-                  <label for="precipYear">Año:</label>
+                  <label for="precipYear">{{ i18n.t('Año:', 'Year:') }}</label>
                   <select id="precipYear" [(ngModel)]="selectedPrecipYear" (change)="onPrecipYearChange()">
-                    <option value="CLIM">Promedio de varios años</option>
+                    <option value="CLIM">{{ i18n.t('Promedio de varios años', 'Multi-year Climatology') }}</option>
                     @for (yr of availableYears; track yr) {
                       <option [ngValue]="yr">{{ yr }}</option>
                     }
                   </select>
                 </div>
               </div>
-              <p class="chart-hint">Haz clic en cualquier mes para ver en qué días llovió.</p>
+              <p class="chart-hint">{{ i18n.t('Haz clic en cualquier mes para ver en qué días llovió.', 'Click any month to inspect daily rainfall.') }}</p>
 
               <div class="bar-chart">
                 @for (m of displayedMonthlyProfile; track m.month) {
@@ -303,30 +307,30 @@
                     class="bar-col"
                     [class.selected]="selectedMonthNumber === m.month"
                     (click)="selectMonthForDaily(m.month)"
-                    [title]="m.monthName + ': ' + m.precipitationMm + ' mm | ' + m.tempMeanC + '°C (Clic para detalle diario)'">
+                    [title]="i18n.tr(m.monthName) + ': ' + m.precipitationMm + ' mm | ' + m.tempMeanC + '°C'">
                     <div class="bar-value">{{ m.precipitationMm | number:'1.0-0' }}</div>
                     <div class="bar-track">
                       <div class="bar-fill" [style.height.%]="(m.precipitationMm / getMaxMonthlyPrecip()) * 100"></div>
                     </div>
-                    <div class="bar-label">{{ m.monthName }}</div>
+                    <div class="bar-label">{{ i18n.tr(m.monthName) }}</div>
                   </button>
                 }
               </div>
 
               @if (loadingDaily) {
-                <div class="daily-loading">Cargando detalle diario de NASA POWER...</div>
+                <div class="daily-loading">{{ i18n.t('Cargando detalle diario de NASA POWER...', 'Loading NASA POWER daily data...') }}</div>
               }
 
               @if (selectedMonthDetail; as detail) {
                 <div class="daily-panel">
                   <div class="daily-header">
                     <div>
-                      <strong>{{ detail.monthName }} {{ detail.year }}</strong>
+                      <strong>{{ i18n.tr(detail.monthName) }} {{ detail.year }}</strong>
                       <span class="daily-source"> · {{ detail.source }}</span>
                     </div>
                     <div class="daily-stats">
-                      <span class="stat-pill">Total: <strong>{{ detail.totalPrecipitationMm }} mm</strong></span>
-                      <span class="stat-pill rain">Días con lluvia: <strong>{{ detail.rainyDaysCount }}</strong> / {{ detail.days.length }}</span>
+                      <span class="stat-pill">{{ i18n.t('Total:', 'Total:') }} <strong>{{ detail.totalPrecipitationMm }} mm</strong></span>
+                      <span class="stat-pill rain">{{ i18n.t('Días con lluvia:', 'Rainy days:') }} <strong>{{ detail.rainyDaysCount }}</strong> / {{ detail.days.length }}</span>
                     </div>
                   </div>
 
@@ -351,41 +355,41 @@
           @if (showClimateDetails) {
             <div class="collapsible-panel">
               <div class="water-balance-note">
-                <strong>Balance hídrico anual:</strong>
-                Lluvia {{ res.earthObservations.climate.annualPrecipitationMm }} mm ·
-                Evaporación {{ res.earthObservations.climate.annualEt0Mm ?? 0 }} mm ·
-                {{ (res.earthObservations.climate.annualWaterBalanceMm ?? 0) >= 0 ? 'Sobra' : 'Falta' }} {{ res.earthObservations.climate.annualWaterBalanceMm ?? 0 }} mm
-                · Abono natural del suelo: {{ res.soil.organicCarbonPct }}%
+                <strong>{{ i18n.t('Balance hídrico anual:', 'Annual Water Balance:') }}</strong>
+                {{ i18n.t('Lluvia', 'Rain') }} {{ res.earthObservations.climate.annualPrecipitationMm }} mm ·
+                {{ i18n.t('Evaporación', 'ET₀') }} {{ res.earthObservations.climate.annualEt0Mm ?? 0 }} mm ·
+                {{ (res.earthObservations.climate.annualWaterBalanceMm ?? 0) >= 0 ? i18n.t('Sobra', 'Surplus') : i18n.t('Falta', 'Deficit') }} {{ res.earthObservations.climate.annualWaterBalanceMm ?? 0 }} mm
+                · {{ i18n.t('Abono natural del suelo:', 'Soil organic carbon:') }} {{ res.soil.organicCarbonPct }}%
               </div>
 
               @if (res.earthObservations.recentAnomaly; as anom) {
                 <div class="anomaly-strip">
-                  <span class="anomaly-badge">{{ anom.statusLabel }}</span>
-                  <span>{{ anom.summaryText }}</span>
+                  <span class="anomaly-badge">{{ i18n.tr(anom.statusLabel) }}</span>
+                  <span>{{ i18n.t(anom.summaryText, 'Last 30 days: ' + anom.precipitation30DaysMm + ' mm (' + (anom.anomalyPct >= 0 ? '+' : '') + anom.anomalyPct + '% vs normal; avg ' + anom.normal30DaysMm + ' mm).') }}</span>
                 </div>
               }
 
               @if (res.earthObservations.terrain; as terr) {
                 <div class="terrain-strip">
                   <div>
-                    <strong>Altura e Inclinación de tu Terreno:</strong>
-                    {{ terr.meanElevationM }} metros de altura · Inclinación ~{{ terr.estimatedSlopePct }}% · Riesgo de deslave:
+                    <strong>{{ i18n.t('Altura e Inclinación de tu Terreno:', 'Elevation & Terrain Slope:') }}</strong>
+                    {{ terr.meanElevationM }} m · {{ i18n.t('Inclinación', 'Slope') }} ~{{ terr.estimatedSlopePct }}% · {{ i18n.t('Riesgo de deslave:', 'Erosion risk:') }}
                     <strong
                       [class.risk-low]="terr.erosionRisk === 'Bajo'"
                       [class.risk-medium]="terr.erosionRisk === 'Moderado'"
                       [class.risk-high]="terr.erosionRisk === 'Alto'">
-                      {{ terr.erosionRisk }}
+                      {{ i18n.tr(terr.erosionRisk) }}
                     </strong>
                   </div>
-                  <small>{{ terr.terrainNote }}</small>
+                  <small>{{ i18n.t(terr.terrainNote, 'SRTM/Copernicus DEM relief profile. Prioritize cover crops and deep roots on steeper slopes.') }}</small>
                 </div>
               }
 
               <div class="eonet-box">
                 <div class="sentinel-header">
-                  <strong>Alertas Climáticas Cercanas (últimos 6 meses)</strong>
+                  <strong>{{ i18n.t('Alertas Climáticas Cercanas (últimos 6 meses)', 'Nearby NASA EONET Extreme Events (last 6 months)') }}</strong>
                   <span class="sentinel-status">
-                    {{ res.earthObservations.eonetQueryLive ? 'Monitoreo Satelital NASA' : 'Sin conexión de alertas' }}
+                    {{ res.earthObservations.eonetQueryLive ? i18n.t('Monitoreo Satelital NASA', 'NASA Satellite Monitoring') : i18n.t('Sin conexión de alertas', 'Alerts offline') }}
                   </span>
                 </div>
                 @if (res.earthObservations.regionalExtremeEvents.length > 0) {
@@ -394,57 +398,57 @@
                       <div class="eonet-item">
                         <span class="eonet-cat">{{ ev.category }}</span>
                         <span class="eonet-title">{{ ev.title }}</span>
-                        <span class="eonet-meta">a {{ ev.distanceKm }} km de tu finca · {{ ev.date | date:'dd/MM/yyyy' }} · {{ ev.status }}</span>
+                        <span class="eonet-meta">{{ ev.distanceKm }} km · {{ ev.date | date:'dd/MM/yyyy' }} · {{ ev.status }}</span>
                       </div>
                     }
                   </div>
                   <p class="eonet-tip">
-                    Consejo: si hubo lluvias fuertes o inundaciones cerca, prioriza rotaciones con buen drenaje y cultivos de cobertura para proteger tu suelo.
+                    {{ i18n.t('Consejo: si hubo lluvias fuertes o inundaciones cerca, prioriza rotaciones con buen drenaje y cultivos de cobertura para proteger tu suelo.', 'Tip: after nearby heavy rains or floods, prioritize well-drained rotations and cover crops to protect topsoil.') }}
                   </p>
                 } @else {
-                  <p class="scene-empty">Sin eventos extremos reportados en un radio de 50 km alrededor de tu finca en los últimos 6 meses.</p>
+                  <p class="scene-empty">{{ i18n.t('Sin eventos extremos reportados en un radio de 50 km alrededor de tu finca en los últimos 6 meses.', 'No extreme events reported within 50 km of this parcel in the last 6 months.') }}</p>
                 }
               </div>
 
               @if (res.earthObservations.pestRisk; as pest) {
                 <div class="pest-box">
                   <div class="sentinel-header">
-                    <strong>Riesgo de Plagas y Enfermedades (Clima NASA)</strong>
-                    <span class="pest-reduction">Rotación #1 reduce riesgo ~{{ pest.rotationRiskReductionPct }}%</span>
+                    <strong>{{ i18n.t('Riesgo de Plagas y Enfermedades (Clima NASA)', 'Pest & Disease Climate Risk (NASA POWER)') }}</strong>
+                    <span class="pest-reduction">{{ i18n.t('Rotación #1 reduce riesgo', 'Rotation #1 cuts risk') }} ~{{ pest.rotationRiskReductionPct }}%</span>
                   </div>
 
                   <div class="pest-grid">
                     <div class="pest-card">
-                      <span>Hongos foliares (humedad y lluvia)</span>
+                      <span>{{ i18n.t('Hongos foliares (humedad y lluvia)', 'Fungal risk (humidity & rain)') }}</span>
                       <strong
                         [class.risk-low]="pest.fungalDiseaseRisk === 'Bajo'"
                         [class.risk-medium]="pest.fungalDiseaseRisk === 'Moderado'"
                         [class.risk-high]="pest.fungalDiseaseRisk === 'Alto'">
-                        {{ pest.fungalDiseaseRisk }} ({{ pest.fungalRiskScore }}/100)
+                        {{ i18n.tr(pest.fungalDiseaseRisk) }} ({{ pest.fungalRiskScore }}/100)
                       </strong>
                     </div>
                     <div class="pest-card">
-                      <span>Insectos / plagas de calor</span>
+                      <span>{{ i18n.t('Insectos / plagas de calor', 'Insect / heat pest risk') }}</span>
                       <strong
                         [class.risk-low]="pest.insectPestRisk === 'Bajo'"
                         [class.risk-medium]="pest.insectPestRisk === 'Moderado'"
                         [class.risk-high]="pest.insectPestRisk === 'Alto'">
-                        {{ pest.insectPestRisk }} ({{ pest.insectRiskScore }}/100)
+                        {{ i18n.tr(pest.insectPestRisk) }} ({{ pest.insectRiskScore }}/100)
                       </strong>
                     </div>
                   </div>
 
                   @if (pest.highRiskMonths.length > 0) {
                     <div class="pest-months">
-                      <span>Meses a vigilar en campo:</span>
+                      <span>{{ i18n.t('Meses a vigilar en campo:', 'High-risk months to monitor:') }}</span>
                       @for (m of pest.highRiskMonths; track m) {
-                        <span class="month-tag">{{ m }}</span>
+                        <span class="month-tag">{{ i18n.tr(m) }}</span>
                       }
                     </div>
                   }
 
-                  <p class="pest-note">{{ pest.monocultureRiskNote }}</p>
-                  <p class="pest-disclaimer">{{ pest.scientificDisclaimer }}</p>
+                  <p class="pest-note">{{ i18n.t(pest.monocultureRiskNote, 'Continuous monoculture increases pest & fungal pressure during warm/humid months.') }}</p>
+                  <p class="pest-disclaimer">{{ i18n.t(pest.scientificDisclaimer, 'Satellites detect temperature, humidity & vegetation stress favorable for pests, not insects directly. Confirm with field scouting.') }}</p>
                 </div>
               }
             </div>
@@ -454,8 +458,8 @@
         <!-- Top 3 Rotation Recommendations -->
         <div class="card">
           <div class="card-header">
-            <h2>Planes de Siembra Recomendados (Top 3)</h2>
-            <span class="chart-hint">Haz clic en un plan para compararlo abajo</span>
+            <h2>{{ i18n.t('Planes de Siembra Recomendados (Top 3)', 'Recommended Crop Rotations (Top 3)') }}</h2>
+            <span class="chart-hint">{{ i18n.t('Haz clic en un plan para compararlo abajo', 'Click a plan to compare below') }}</span>
           </div>
 
           <div class="recommendations-list">
@@ -471,11 +475,11 @@
                 <div class="rec-head">
                   <div>
                     <span class="rank-badge">#{{ rec.rank }}</span>
-                    <strong>{{ rec.strategyName }}</strong>
+                    <strong>{{ i18n.tr(rec.strategyName) }}</strong>
                   </div>
                   <div class="rec-head-right">
                     <span class="select-pill" [class.active]="rec.rank === selectedRotationRank">
-                      {{ rec.rank === selectedRotationRank ? 'Comparando' : 'Comparar' }}
+                      {{ rec.rank === selectedRotationRank ? i18n.t('Comparando', 'Comparing') : i18n.t('Comparar', 'Compare') }}
                     </span>
                     <span class="score-badge">{{ rec.overallScore }} / 100</span>
                   </div>
@@ -485,7 +489,7 @@
                 <div class="crop-flow-compact">
                   @for (step of rec.cycles; track step.cycleNumber; let last = $last) {
                     <span class="crop-flow-pill">
-                      <small>{{ step.seasonLabel }}:</small> <strong>{{ step.crop.name }}</strong>
+                      <small>{{ i18n.tr(step.seasonLabel) }}:</small> <strong>{{ i18n.tr(step.crop.name) }}</strong>
                     </span>
                     @if (!last) {
                       <span class="crop-flow-arrow">→</span>
@@ -498,7 +502,7 @@
                     type="button"
                     class="btn-link-toggle"
                     (click)="toggleRotationDetails(rec.rank, $event)">
-                    {{ isRotationExpanded(rec.rank) ? 'Ocultar detalles' : 'Ver por qué y métricas' }}
+                    {{ isRotationExpanded(rec.rank) ? i18n.t('Ocultar detalles', 'Hide details') : i18n.t('Ver por qué y métricas', 'Show rationale & metrics') }}
                   </button>
                 </div>
 
@@ -507,17 +511,17 @@
                     <p class="rec-summary">{{ rec.summary }}</p>
 
                     <div class="rec-metrics">
-                      <span>Ahorro de agua: <strong>{{ rec.waterEfficiencyScore }}</strong></span>
-                      <span>Fuerza de tierra: <strong>{{ rec.soilHealthScore }}</strong></span>
-                      <span>Control plagas: <strong>{{ rec.pestBreakScore }}</strong></span>
-                      <span>Resistencia clima: <strong>{{ rec.climateResilienceScore }}</strong></span>
+                      <span>{{ i18n.t('Ahorro de agua:', 'Water efficiency:') }} <strong>{{ rec.waterEfficiencyScore }}</strong></span>
+                      <span>{{ i18n.t('Fuerza de tierra:', 'Soil health:') }} <strong>{{ rec.soilHealthScore }}</strong></span>
+                      <span>{{ i18n.t('Control plagas:', 'Pest break:') }} <strong>{{ rec.pestBreakScore }}</strong></span>
+                      <span>{{ i18n.t('Resistencia clima:', 'Climate resilience:') }} <strong>{{ rec.climateResilienceScore }}</strong></span>
                     </div>
 
                     <div class="cycles-timeline">
                       @for (step of rec.cycles; track step.cycleNumber) {
                         <div class="cycle-step">
-                          <div class="cycle-season">{{ step.seasonLabel }}</div>
-                          <div class="cycle-crop">{{ step.crop.name }}</div>
+                          <div class="cycle-season">{{ i18n.tr(step.seasonLabel) }}</div>
+                          <div class="cycle-crop">{{ i18n.tr(step.crop.name) }}</div>
                           <div class="cycle-rationale">{{ step.rationale }}</div>
                         </div>
                       }
@@ -533,9 +537,9 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <h2>Comparación: Sembrar siempre lo mismo ({{ res.baselineCropName }}) vs. Plan #{{ selectedRotation?.rank ?? 1 }}</h2>
+              <h2>{{ i18n.t('Comparación: Sembrar siempre lo mismo', 'What-If Comparison: Monoculture') }} ({{ i18n.tr(res.baselineCropName) }}) vs. {{ i18n.t('Plan', 'Plan') }} #{{ selectedRotation?.rank ?? 1 }}</h2>
               @if (selectedRotation) {
-                <span class="chart-region-tag">{{ selectedRotation.strategyName }}</span>
+                <span class="chart-region-tag">{{ i18n.tr(selectedRotation.strategyName) }}</span>
               }
             </div>
           </div>
@@ -547,7 +551,7 @@
                 class="tab-btn"
                 [class.active]="selectedScenarioCode === sc.scenarioCode"
                 (click)="selectedScenarioCode = sc.scenarioCode">
-                {{ sc.scenarioName }}
+                {{ i18n.tr(sc.scenarioName) }}
               </button>
             }
           </div>
@@ -555,15 +559,15 @@
           @if (activeScenario; as sc) {
             <div class="scenario-body">
               <div class="comparison-row">
-                <div class="comp-label">Seguridad de tu Cosecha</div>
+                <div class="comp-label">{{ i18n.t('Seguridad de tu Cosecha', 'Yield Stability') }}</div>
                 <div class="comp-bars">
                   <div class="comp-bar-line">
-                    <span>Siempre lo mismo</span>
+                    <span>{{ i18n.t('Siempre lo mismo', 'Monoculture') }}</span>
                     <div class="track"><div class="fill mono" [style.width.%]="sc.monocultureYieldStabilityPct"></div></div>
                     <strong>{{ sc.monocultureYieldStabilityPct }}%</strong>
                   </div>
                   <div class="comp-bar-line">
-                    <span>Plan #{{ selectedRotation?.rank ?? 1 }}</span>
+                    <span>{{ i18n.t('Plan', 'Plan') }} #{{ selectedRotation?.rank ?? 1 }}</span>
                     <div class="track"><div class="fill rot" [style.width.%]="sc.rotationYieldStabilityPct"></div></div>
                     <strong>{{ sc.rotationYieldStabilityPct }}%</strong>
                   </div>
@@ -571,15 +575,15 @@
               </div>
 
               <div class="comparison-row">
-                <div class="comp-label">Fuerza y Fertilidad de la Tierra</div>
+                <div class="comp-label">{{ i18n.t('Fuerza y Fertilidad de la Tierra', 'Soil Health Index') }}</div>
                 <div class="comp-bars">
                   <div class="comp-bar-line">
-                    <span>Siempre lo mismo</span>
+                    <span>{{ i18n.t('Siempre lo mismo', 'Monoculture') }}</span>
                     <div class="track"><div class="fill mono" [style.width.%]="sc.monocultureSoilHealthIndex"></div></div>
                     <strong>{{ sc.monocultureSoilHealthIndex }}</strong>
                   </div>
                   <div class="comp-bar-line">
-                    <span>Plan #{{ selectedRotation?.rank ?? 1 }}</span>
+                    <span>{{ i18n.t('Plan', 'Plan') }} #{{ selectedRotation?.rank ?? 1 }}</span>
                     <div class="track"><div class="fill rot" [style.width.%]="sc.rotationSoilHealthIndex"></div></div>
                     <strong>{{ sc.rotationSoilHealthIndex }}</strong>
                   </div>
@@ -588,13 +592,13 @@
 
               <div class="scenario-insight">
                 <div class="scenario-insight-head">
-                  <span><strong>Ahorro de agua estimado:</strong> {{ sc.waterSavedPct }}%</span>
+                  <span><strong>{{ i18n.t('Ahorro de agua estimado:', 'Estimated water saved:') }}</strong> {{ sc.waterSavedPct }}%</span>
                   <button type="button" class="btn-link-toggle" (click)="showScenarioInsight = !showScenarioInsight">
-                    {{ showScenarioInsight ? 'Ocultar explicación' : 'Ver explicación' }}
+                    {{ showScenarioInsight ? i18n.t('Ocultar explicación', 'Hide details') : i18n.t('Ver explicación', 'Show details') }}
                   </button>
                 </div>
                 @if (showScenarioInsight) {
-                  <small class="water-mm-detail">Consumo estimado: {{ sc.rotationWaterUseMm }} mm vs {{ sc.monocultureWaterUseMm }} mm</small>
+                  <small class="water-mm-detail">{{ i18n.t('Consumo estimado:', 'Estimated water use:') }} {{ sc.rotationWaterUseMm }} mm vs {{ sc.monocultureWaterUseMm }} mm</small>
                   <p>{{ sc.keyInsight }}</p>
                 }
               </div>
@@ -616,8 +620,8 @@
         </app-farm-twin-3d>
       } @else {
         <div class="card empty-state">
-          <h2>Selecciona o dibuja una parcela para comenzar</h2>
-          <p>Carga <strong>Finca1.kml</strong> o <strong>Finca2.kml</strong> arriba, sube tu propio KML, o dibuja un polígono directamente en el mapa.</p>
+          <h2>{{ i18n.t('Selecciona o dibuja una parcela para comenzar', 'Select or draw a parcel to begin') }}</h2>
+          <p>{{ i18n.t('Carga Finca1.kml o Finca2.kml arriba, sube tu propio KML, o dibuja un polígono directamente en el mapa.', 'Load Finca1.kml or Finca2.kml above, upload your own KML, or draw a polygon directly on the map.') }}</p>
         </div>
       }
     </section>

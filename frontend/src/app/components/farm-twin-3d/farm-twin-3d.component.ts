@@ -6,11 +6,13 @@ import {
   OnChanges,
   OnDestroy,
   SimpleChanges,
-  ViewChild
+  ViewChild,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import type * as THREE from 'three';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { I18nService } from '../../services/i18n.service';
 import {
   EonetEventDto,
   ParcelTerrainDto,
@@ -31,11 +33,11 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
     <div class="twin-card">
       <div class="twin-header">
         <div>
-          <h3>Vista 3D de tu Finca (Gemelo Digital)</h3>
+          <h3>{{ i18n.t('Vista 3D de tu Finca (Gemelo Digital)', '3D Farm View (Digital Twin)') }}</h3>
           <p class="twin-sub">
-            Relieve real del terreno (NASA/SRTM) ·
+            {{ i18n.t('Relieve real del terreno (NASA/SRTM)', 'Real terrain relief (NASA/SRTM)') }} ·
             @if (terrain) {
-              <span>{{ terrain.meanElevationM }} msnm · Inclinación {{ terrain.estimatedSlopePct }}% ({{ terrain.erosionRisk }})</span>
+              <span>{{ terrain.meanElevationM }} m · {{ i18n.t('Inclinación', 'Slope') }} {{ terrain.estimatedSlopePct }}% ({{ i18n.tr(terrain.erosionRisk) }})</span>
             }
           </p>
         </div>
@@ -46,64 +48,64 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
             class="twin-pill"
             [class.active]="viewMode === 'rotation'"
             (click)="setViewMode('rotation')">
-            Plan #{{ selectedRotation?.rank ?? 1 }}
+            {{ i18n.t('Plan', 'Plan') }} #{{ selectedRotation?.rank ?? 1 }}
           </button>
           <button
             type="button"
             class="twin-pill"
             [class.active]="viewMode === 'monoculture'"
             (click)="setViewMode('monoculture')">
-            Siempre lo mismo ({{ baselineCropName }})
+            {{ i18n.t('Siempre lo mismo', 'Monoculture') }} ({{ i18n.tr(baselineCropName) }})
           </button>
           <button type="button" class="twin-pill reset-btn" (click)="resetCamera()">
-            Centrar
+            {{ i18n.t('Centrar', 'Reset View') }}
           </button>
         </div>
       </div>
 
       <!-- Hazard & Natural Disaster Simulator -->
       <div class="hazard-bar">
-        <span class="cycle-caption">Simular riesgo:</span>
+        <span class="cycle-caption">{{ i18n.t('Simular riesgo:', 'Simulate risk:') }}</span>
         <button
           type="button"
           class="hazard-btn"
           [class.active]="hazardMode === 'AUTO'"
           (click)="setHazardMode('AUTO')">
-          Clima actual / What-If
+          {{ i18n.t('Clima actual / What-If', 'Current / What-If') }}
         </button>
         <button
           type="button"
           class="hazard-btn danger"
           [class.active]="hazardMode === 'LANDSLIDE'"
           (click)="setHazardMode('LANDSLIDE')">
-          Lluvia fuerte / Deslave
+          {{ i18n.t('Lluvia fuerte / Deslave', 'Heavy Rain / Landslide') }}
         </button>
         <button
           type="button"
           class="hazard-btn water"
           [class.active]="hazardMode === 'FLOOD'"
           (click)="setHazardMode('FLOOD')">
-          Inundación (parte baja)
+          {{ i18n.t('Inundación (parte baja)', 'Flooding (low basin)') }}
         </button>
         <button
           type="button"
           class="hazard-btn heat"
           [class.active]="hazardMode === 'DROUGHT_HEAT'"
           (click)="setHazardMode('DROUGHT_HEAT')">
-          Sequía / Calor extremo
+          {{ i18n.t('Sequía / Calor extremo', 'Drought / Extreme Heat') }}
         </button>
       </div>
 
       @if (viewMode === 'rotation' && selectedRotation?.cycles?.length) {
         <div class="cycle-selector">
-          <span class="cycle-caption">Etapa de siembra:</span>
+          <span class="cycle-caption">{{ i18n.t('Etapa de siembra:', 'Planting cycle:') }}</span>
           @for (c of selectedRotation!.cycles; track c.cycleNumber; let i = $index) {
             <button
               type="button"
               class="cycle-btn"
               [class.active]="selectedCycleIndex === i"
               (click)="setCycleIndex(i)">
-              {{ c.cycleNumber }}ª: {{ c.crop.name }}
+              {{ c.cycleNumber }}{{ i18n.t('ª', 'x') }}: {{ i18n.tr(c.crop.name) }}
             </button>
           }
         </div>
@@ -114,7 +116,7 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
 
         @if (webglError) {
           <div class="webgl-fallback">
-            No se pudo iniciar la vista 3D en este navegador ({{ webglError }}).
+            {{ i18n.t('No se pudo iniciar la vista 3D en este navegador', 'Could not initialize 3D view in this browser') }} ({{ webglError }}).
           </div>
         } @else {
           <div class="hud-overlay">
@@ -123,20 +125,20 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
             </div>
 
             <div class="hud-crop">
-              <strong>Cultivo en 3D:</strong> {{ currentCropLabel }}
+              <strong>{{ i18n.t('Cultivo en 3D:', '3D Crop:') }}</strong> {{ currentCropLabel }}
               @if (activeScenario) {
-                <span> · Cosecha esperada: {{ currentStabilityPct }}%</span>
+                <span> · {{ i18n.t('Cosecha esperada:', 'Expected yield stability:') }} {{ currentStabilityPct }}%</span>
               }
             </div>
 
             @if (primaryEonetAlert; as alert) {
               <div class="hud-eonet">
                 <span class="pulse-dot"></span>
-                <span><strong>Alerta NASA EONET ({{ alert.distanceKm }} km):</strong> {{ alert.title }}</span>
+                <span><strong>{{ i18n.t('Alerta NASA EONET', 'NASA EONET Alert') }} ({{ alert.distanceKm }} km):</strong> {{ alert.title }}</span>
               </div>
             } @else if (recentAnomaly && recentAnomaly.anomalyPct >= 40) {
               <div class="hud-anomaly">
-                <span><strong>Lluvia reciente NASA:</strong> +{{ recentAnomaly.anomalyPct }}% sobre lo normal (suelo húmedo)</span>
+                <span><strong>{{ i18n.t('Lluvia reciente NASA:', 'NASA Recent Rain:') }}</strong> +{{ recentAnomaly.anomalyPct }}% {{ i18n.t('sobre lo normal (suelo húmedo)', 'above normal (wet soil)') }}</span>
               </div>
             }
           </div>
@@ -151,18 +153,18 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
 
       <div class="twin-footer">
         <div class="legend-items">
-          <span class="leg"><i class="dot border"></i> Borde de tu finca</span>
-          <span class="leg"><i class="dot healthy"></i> Cultivo fuerte</span>
-          <span class="leg"><i class="dot stressed"></i> Cultivo con estrés</span>
+          <span class="leg"><i class="dot border"></i> {{ i18n.t('Borde de tu finca', 'Parcel boundary') }}</span>
+          <span class="leg"><i class="dot healthy"></i> {{ i18n.t('Cultivo fuerte', 'Healthy crop') }}</span>
+          <span class="leg"><i class="dot stressed"></i> {{ i18n.t('Cultivo con estrés', 'Stressed crop') }}</span>
           @if (hazardMode === 'LANDSLIDE') {
-            <span class="leg"><i class="dot landslide"></i> Zona de deslave / arrastre</span>
+            <span class="leg"><i class="dot landslide"></i> {{ i18n.t('Zona de deslave / arrastre', 'Landslide / runoff zone') }}</span>
           } @else if (hazardMode === 'FLOOD') {
-            <span class="leg"><i class="dot water"></i> Acumulación de agua</span>
+            <span class="leg"><i class="dot water"></i> {{ i18n.t('Acumulación de agua', 'Water pooling') }}</span>
           } @else if ((terrain?.estimatedSlopePct ?? 0) >= 5) {
-            <span class="leg"><i class="dot water"></i> Caída de agua (pendiente)</span>
+            <span class="leg"><i class="dot water"></i> {{ i18n.t('Caída de agua (pendiente)', 'Runoff direction (slope)') }}</span>
           }
         </div>
-        <span class="drag-hint">Arrastra para girar · Rueda para acercar</span>
+        <span class="drag-hint">{{ i18n.t('Arrastra para girar · Rueda para acercar', 'Drag to rotate · Scroll to zoom') }}</span>
       </div>
     </div>
   `,
@@ -407,6 +409,7 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
   `]
 })
 export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy {
+  readonly i18n = inject(I18nService);
   @ViewChild('rendererContainer', { static: true }) containerRef!: ElementRef<HTMLDivElement>;
 
   @Input() parcel?: ParsedParcelDto | null;
@@ -453,46 +456,72 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   get statusBannerText(): string {
+    const slope = this.terrain?.estimatedSlopePct ?? 7.5;
     if (this.hazardMode === 'LANDSLIDE') {
-      return `Simulando: Lluvia fuerte y riesgo de deslave (${this.terrain?.estimatedSlopePct ?? 7.5}% pendiente)`;
+      return this.i18n.t(
+        `Simulando: Lluvia fuerte y riesgo de deslave (${slope}% pendiente)`,
+        `Simulating: Heavy rain & landslide risk (${slope}% slope)`
+      );
     }
     if (this.hazardMode === 'FLOOD') {
-      return `Simulando: Inundación en parte baja (${this.soil?.drainage ?? 'Drenaje normal'})`;
+      return this.i18n.t(
+        `Simulando: Inundación en parte baja (${this.soil?.drainage ?? 'Drenaje normal'})`,
+        `Simulating: Low-basin flooding (${this.i18n.tr(this.soil?.drainage ?? 'Drenaje normal')})`
+      );
     }
     if (this.hazardMode === 'DROUGHT_HEAT' || this.scenarioCode === 'DROUGHT') {
-      return 'Simulando: Sequía fuerte (-25% lluvia)';
+      return this.i18n.t('Simulando: Sequía fuerte (-25% lluvia)', 'Simulating: Severe drought (-25% rain)');
     }
     if (this.scenarioCode === 'HEATWAVE') {
-      return 'Simulando: Ola de Calor (+2°C)';
+      return this.i18n.t('Simulando: Ola de Calor (+2°C)', 'Simulating: Heatwave (+2°C)');
     }
-    return 'Simulando: Año Normal';
+    return this.i18n.t('Simulando: Año Normal', 'Simulating: Normal Year');
   }
 
   get hazardExplanation(): string | null {
     const slope = this.terrain?.estimatedSlopePct ?? 7.5;
+    const rank = this.selectedRotation?.rank ?? 1;
     if (this.hazardMode === 'LANDSLIDE') {
       return this.viewMode === 'monoculture'
-        ? `Pendiente de ${slope}% sin rotación: la lluvia arrastra tierra fértil cuesta abajo. Cambia a "Plan #${this.selectedRotation?.rank ?? 1}" para ver cómo la cobertura protege el suelo.`
-        : `Con el Plan #${this.selectedRotation?.rank ?? 1}, las raíces y cobertura vegetal frenan el arrastre de tierra en esta pendiente de ${slope}%.`;
+        ? this.i18n.t(
+            `Pendiente de ${slope}% sin rotación: la lluvia arrastra tierra fértil cuesta abajo. Cambia a "Plan #${rank}" para ver cómo la cobertura protege el suelo.`,
+            `${slope}% slope without rotation: heavy rain washes fertile topsoil downhill. Switch to "Plan #${rank}" to see how cover crops protect the soil.`
+          )
+        : this.i18n.t(
+            `Con el Plan #${rank}, las raíces y cobertura vegetal frenan el arrastre de tierra en esta pendiente de ${slope}%.`,
+            `With Plan #${rank}, deep roots and vegetative cover reduce soil erosion on this ${slope}% slope.`
+          );
     }
     if (this.hazardMode === 'FLOOD') {
-      return `En lluvias intensas, el agua baja hacia la zona más honda del terreno (${this.terrain?.minElevationM ?? 820} msnm). Evita cultivos sensibles al encharcamiento allí.`;
+      const minElev = this.terrain?.minElevationM ?? 820;
+      return this.i18n.t(
+        `En lluvias intensas, el agua baja hacia la zona más honda del terreno (${minElev} msnm). Evita cultivos sensibles al encharcamiento allí.`,
+        `During heavy storms, runoff pools in the lowest elevation basin (${minElev} m). Avoid waterlogging-sensitive crops there.`
+      );
     }
     if (this.hazardMode === 'DROUGHT_HEAT') {
       return this.viewMode === 'monoculture'
-        ? 'Sin rotación, la tierra pierde humedad rápido y el cultivo sufre estrés severo por falta de agua.'
-        : 'La rotación conserva mejor la humedad y materia orgánica del suelo frente a sequía y calor.';
+        ? this.i18n.t(
+            'Sin rotación, la tierra pierde humedad rápido y el cultivo sufre estrés severo por falta de agua.',
+            'Without rotation, soil loses moisture rapidly and monoculture crops suffer severe water stress.'
+          )
+        : this.i18n.t(
+            'La rotación conserva mejor la humedad y materia orgánica del suelo frente a sequía y calor.',
+            'Crop rotation retains soil moisture and organic matter far better under drought and heat.'
+          );
     }
     return null;
   }
 
   get currentCropLabel(): string {
     if (this.viewMode === 'monoculture') {
-      return `${this.baselineCropName} (sin rotar)`;
+      return `${this.i18n.tr(this.baselineCropName)} (${this.i18n.t('sin rotar', 'no rotation')})`;
     }
     const cycles = this.selectedRotation?.cycles ?? [];
     const step = cycles[this.selectedCycleIndex] ?? cycles[0];
-    return step ? `${step.crop.name} (${step.cycleNumber}ª siembra)` : this.baselineCropName;
+    return step
+      ? `${this.i18n.tr(step.crop.name)} (${step.cycleNumber}${this.i18n.t('ª siembra', 'x cycle')})`
+      : this.i18n.tr(this.baselineCropName);
   }
 
   get currentStabilityPct(): number {
