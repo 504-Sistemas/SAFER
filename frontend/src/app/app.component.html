@@ -610,7 +610,9 @@
           [selectedRotation]="selectedRotation"
           [baselineCropName]="res.baselineCropName"
           [scenarioCode]="selectedScenarioCode"
-          [activeScenario]="activeScenario">
+          [activeScenario]="activeScenario"
+          [eonetEvents]="res.earthObservations.regionalExtremeEvents"
+          [recentAnomaly]="res.earthObservations.recentAnomaly">
         </app-farm-twin-3d>
       } @else {
         <div class="card empty-state">

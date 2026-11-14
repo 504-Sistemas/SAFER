@@ -12,12 +12,16 @@ import { CommonModule } from '@angular/common';
 import type * as THREE from 'three';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import {
+  EonetEventDto,
   ParcelTerrainDto,
   ParsedParcelDto,
+  RecentWeatherAnomalyDto,
   RotationRecommendationDto,
   ScenarioMetricPoint,
   SoilProfileDto
 } from '../../models/safer.models';
+
+type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
 
 @Component({
   selector: 'app-farm-twin-3d',
@@ -57,6 +61,39 @@ import {
         </div>
       </div>
 
+      <!-- Hazard & Natural Disaster Simulator -->
+      <div class="hazard-bar">
+        <span class="cycle-caption">Simular riesgo:</span>
+        <button
+          type="button"
+          class="hazard-btn"
+          [class.active]="hazardMode === 'AUTO'"
+          (click)="setHazardMode('AUTO')">
+          Clima actual / What-If
+        </button>
+        <button
+          type="button"
+          class="hazard-btn danger"
+          [class.active]="hazardMode === 'LANDSLIDE'"
+          (click)="setHazardMode('LANDSLIDE')">
+          Lluvia fuerte / Deslave
+        </button>
+        <button
+          type="button"
+          class="hazard-btn water"
+          [class.active]="hazardMode === 'FLOOD'"
+          (click)="setHazardMode('FLOOD')">
+          Inundación (parte baja)
+        </button>
+        <button
+          type="button"
+          class="hazard-btn heat"
+          [class.active]="hazardMode === 'DROUGHT_HEAT'"
+          (click)="setHazardMode('DROUGHT_HEAT')">
+          Sequía / Calor extremo
+        </button>
+      </div>
+
       @if (viewMode === 'rotation' && selectedRotation?.cycles?.length) {
         <div class="cycle-selector">
           <span class="cycle-caption">Etapa de siembra:</span>
@@ -81,22 +118,34 @@ import {
           </div>
         } @else {
           <div class="hud-overlay">
-            <div class="hud-badge" [class.warn]="scenarioCode !== 'NORMAL'">
-              @if (scenarioCode === 'DROUGHT') {
-                Simulando: Sequía (-25% lluvia)
-              } @else if (scenarioCode === 'HEATWAVE') {
-                Simulando: Ola de Calor (+2°C)
-              } @else {
-                Simulando: Año Normal
-              }
+            <div class="hud-badge" [class.warn]="effectiveScenario !== 'NORMAL'" [class.danger]="hazardMode === 'LANDSLIDE'" [class.water]="hazardMode === 'FLOOD'">
+              {{ statusBannerText }}
             </div>
+
             <div class="hud-crop">
               <strong>Cultivo en 3D:</strong> {{ currentCropLabel }}
               @if (activeScenario) {
                 <span> · Cosecha esperada: {{ currentStabilityPct }}%</span>
               }
             </div>
+
+            @if (primaryEonetAlert; as alert) {
+              <div class="hud-eonet">
+                <span class="pulse-dot"></span>
+                <span><strong>Alerta NASA EONET ({{ alert.distanceKm }} km):</strong> {{ alert.title }}</span>
+              </div>
+            } @else if (recentAnomaly && recentAnomaly.anomalyPct >= 40) {
+              <div class="hud-anomaly">
+                <span><strong>Lluvia reciente NASA:</strong> +{{ recentAnomaly.anomalyPct }}% sobre lo normal (suelo húmedo)</span>
+              </div>
+            }
           </div>
+
+          @if (hazardExplanation) {
+            <div class="hud-bottom-note">
+              {{ hazardExplanation }}
+            </div>
+          }
         }
       </div>
 
@@ -105,7 +154,11 @@ import {
           <span class="leg"><i class="dot border"></i> Borde de tu finca</span>
           <span class="leg"><i class="dot healthy"></i> Cultivo fuerte</span>
           <span class="leg"><i class="dot stressed"></i> Cultivo con estrés</span>
-          @if ((terrain?.estimatedSlopePct ?? 0) >= 5) {
+          @if (hazardMode === 'LANDSLIDE') {
+            <span class="leg"><i class="dot landslide"></i> Zona de deslave / arrastre</span>
+          } @else if (hazardMode === 'FLOOD') {
+            <span class="leg"><i class="dot water"></i> Acumulación de agua</span>
+          } @else if ((terrain?.estimatedSlopePct ?? 0) >= 5) {
             <span class="leg"><i class="dot water"></i> Caída de agua (pendiente)</span>
           }
         </div>
@@ -166,12 +219,12 @@ import {
       border-color: #c7d2fe;
       color: #3730a3;
     }
-    .cycle-selector {
+    .hazard-bar, .cycle-selector {
       display: flex;
       align-items: center;
       gap: 6px;
       flex-wrap: wrap;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .cycle-caption {
       font-size: 0.78rem;
@@ -179,15 +232,36 @@ import {
       color: #486581;
       margin-right: 4px;
     }
-    .cycle-btn {
+    .hazard-btn, .cycle-btn {
       border: 1px solid #d9e2ec;
       background: #f0f4f8;
       color: #243b53;
       border-radius: 8px;
       padding: 4px 10px;
-      font-size: 0.76rem;
+      font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .hazard-btn.active {
+      background: #0f766e;
+      border-color: #0f766e;
+      color: #ffffff;
+    }
+    .hazard-btn.danger.active {
+      background: #c2410c;
+      border-color: #c2410c;
+      color: #ffffff;
+    }
+    .hazard-btn.water.active {
+      background: #0369a1;
+      border-color: #0369a1;
+      color: #ffffff;
+    }
+    .hazard-btn.heat.active {
+      background: #b45309;
+      border-color: #b45309;
+      color: #ffffff;
     }
     .cycle-btn.active {
       background: #15803d;
@@ -197,7 +271,7 @@ import {
     .canvas-wrap {
       position: relative;
       width: 100%;
-      height: 310px;
+      height: 325px;
       border-radius: 12px;
       overflow: hidden;
       background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 60%, #e2e8f0 100%);
@@ -212,6 +286,7 @@ import {
       position: absolute;
       top: 10px;
       left: 10px;
+      right: 10px;
       display: flex;
       flex-direction: column;
       gap: 5px;
@@ -220,23 +295,68 @@ import {
     .hud-badge {
       display: inline-block;
       width: fit-content;
-      background: rgba(15, 118, 110, 0.9);
+      background: rgba(15, 118, 110, 0.92);
       color: #fff;
       font-size: 0.74rem;
       font-weight: 700;
-      padding: 4px 9px;
+      padding: 4px 10px;
       border-radius: 999px;
     }
     .hud-badge.warn {
       background: rgba(180, 83, 9, 0.92);
     }
-    .hud-crop {
-      background: rgba(255, 255, 255, 0.9);
+    .hud-badge.danger {
+      background: rgba(194, 65, 12, 0.94);
+    }
+    .hud-badge.water {
+      background: rgba(3, 105, 161, 0.94);
+    }
+    .hud-crop, .hud-eonet, .hud-anomaly {
+      width: fit-content;
+      max-width: 92%;
+      background: rgba(255, 255, 255, 0.92);
       color: #102a43;
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       padding: 4px 9px;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    .hud-eonet {
+      background: rgba(254, 242, 242, 0.95);
+      border: 1px solid #fca5a5;
+      color: #991b1b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hud-anomaly {
+      background: rgba(239, 246, 255, 0.94);
+      border: 1px solid #93c5fd;
+      color: #1e40af;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #dc2626;
+      flex-shrink: 0;
+      animation: eonetPulse 1.4s infinite;
+    }
+    @keyframes eonetPulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.45); opacity: 0.55; }
+    }
+    .hud-bottom-note {
+      position: absolute;
+      bottom: 8px;
+      left: 10px;
+      right: 10px;
+      background: rgba(15, 23, 42, 0.78);
+      color: #f8fafc;
+      font-size: 0.73rem;
+      padding: 5px 10px;
+      border-radius: 8px;
+      pointer-events: none;
     }
     .webgl-fallback {
       display: flex;
@@ -278,6 +398,7 @@ import {
     .dot.border { background: #10b981; }
     .dot.healthy { background: #16a34a; }
     .dot.stressed { background: #ca8a04; }
+    .dot.landslide { background: #dc2626; }
     .dot.water { background: #0284c7; }
     .drag-hint {
       font-style: italic;
@@ -295,8 +416,11 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
   @Input() baselineCropName = 'Maíz';
   @Input() scenarioCode = 'NORMAL';
   @Input() activeScenario?: ScenarioMetricPoint | null;
+  @Input() eonetEvents: EonetEventDto[] = [];
+  @Input() recentAnomaly?: RecentWeatherAnomalyDto | null;
 
   viewMode: 'rotation' | 'monoculture' = 'rotation';
+  hazardMode: HazardMode = 'AUTO';
   selectedCycleIndex = 0;
   webglError: string | null = null;
 
@@ -309,7 +433,58 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
   private animFrameId?: number;
   private resizeObserver?: ResizeObserver;
 
+  // Dynamic hazard animation state
+  private particlePoints?: THREE.Points;
+  private particleVelocities: { vx: number; vy: number; vz: number; startX: number; startY: number; startZ: number }[] = [];
+  private floodMesh?: THREE.Mesh;
+  private floodBaseY = 0;
+  private clock = 0;
+
   private readonly worldSpan = 6.0;
+
+  get effectiveScenario(): string {
+    if (this.hazardMode === 'DROUGHT_HEAT') return 'DROUGHT';
+    if (this.hazardMode === 'LANDSLIDE' || this.hazardMode === 'FLOOD') return 'HAZARD';
+    return this.scenarioCode;
+  }
+
+  get primaryEonetAlert(): EonetEventDto | null {
+    return this.eonetEvents?.length ? this.eonetEvents[0] : null;
+  }
+
+  get statusBannerText(): string {
+    if (this.hazardMode === 'LANDSLIDE') {
+      return `Simulando: Lluvia fuerte y riesgo de deslave (${this.terrain?.estimatedSlopePct ?? 7.5}% pendiente)`;
+    }
+    if (this.hazardMode === 'FLOOD') {
+      return `Simulando: Inundación en parte baja (${this.soil?.drainage ?? 'Drenaje normal'})`;
+    }
+    if (this.hazardMode === 'DROUGHT_HEAT' || this.scenarioCode === 'DROUGHT') {
+      return 'Simulando: Sequía fuerte (-25% lluvia)';
+    }
+    if (this.scenarioCode === 'HEATWAVE') {
+      return 'Simulando: Ola de Calor (+2°C)';
+    }
+    return 'Simulando: Año Normal';
+  }
+
+  get hazardExplanation(): string | null {
+    const slope = this.terrain?.estimatedSlopePct ?? 7.5;
+    if (this.hazardMode === 'LANDSLIDE') {
+      return this.viewMode === 'monoculture'
+        ? `Pendiente de ${slope}% sin rotación: la lluvia arrastra tierra fértil cuesta abajo. Cambia a "Plan #${this.selectedRotation?.rank ?? 1}" para ver cómo la cobertura protege el suelo.`
+        : `Con el Plan #${this.selectedRotation?.rank ?? 1}, las raíces y cobertura vegetal frenan el arrastre de tierra en esta pendiente de ${slope}%.`;
+    }
+    if (this.hazardMode === 'FLOOD') {
+      return `En lluvias intensas, el agua baja hacia la zona más honda del terreno (${this.terrain?.minElevationM ?? 820} msnm). Evita cultivos sensibles al encharcamiento allí.`;
+    }
+    if (this.hazardMode === 'DROUGHT_HEAT') {
+      return this.viewMode === 'monoculture'
+        ? 'Sin rotación, la tierra pierde humedad rápido y el cultivo sufre estrés severo por falta de agua.'
+        : 'La rotación conserva mejor la humedad y materia orgánica del suelo frente a sequía y calor.';
+    }
+    return null;
+  }
 
   get currentCropLabel(): string {
     if (this.viewMode === 'monoculture') {
@@ -356,6 +531,11 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
     this.rebuildScene();
   }
 
+  setHazardMode(mode: HazardMode): void {
+    this.hazardMode = mode;
+    this.rebuildScene();
+  }
+
   setCycleIndex(idx: number): void {
     this.selectedCycleIndex = idx;
     this.rebuildScene();
@@ -371,7 +551,7 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
   private async initThree(): Promise<void> {
     const container = this.containerRef.nativeElement;
     const width = Math.max(300, container.clientWidth || 560);
-    const height = Math.max(240, container.clientHeight || 310);
+    const height = Math.max(240, container.clientHeight || 325);
 
     try {
       const [threeMod, controlsMod] = await Promise.all([
@@ -403,7 +583,6 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
       this.controls.target.set(0, 0.35, 0);
       this.controls.update();
 
-      // Lighting
       const ambient = new THREE.AmbientLight(0xffffff, 0.72);
       this.scene.add(ambient);
 
@@ -426,6 +605,8 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
 
       const animate = () => {
         this.animFrameId = requestAnimationFrame(animate);
+        this.clock += 0.025;
+        this.animateHazards();
         this.controls?.update();
         if (this.renderer && this.scene && this.camera) {
           this.renderer.render(this.scene, this.camera);
@@ -434,6 +615,30 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
       animate();
     } catch (err) {
       this.webglError = err instanceof Error ? err.message : 'WebGL no disponible';
+    }
+  }
+
+  private animateHazards(): void {
+    if (this.particlePoints && this.particleVelocities.length > 0) {
+      const posAttr = this.particlePoints.geometry.getAttribute('position') as THREE.BufferAttribute;
+      for (let i = 0; i < this.particleVelocities.length; i++) {
+        const v = this.particleVelocities[i];
+        let x = posAttr.getX(i) + v.vx;
+        let y = posAttr.getY(i) + v.vy;
+        let z = posAttr.getZ(i) + v.vz;
+
+        if (y < 0.24 || Math.abs(x) > 3.2 || Math.abs(z) > 3.2) {
+          x = v.startX;
+          y = v.startY;
+          z = v.startZ;
+        }
+        posAttr.setXYZ(i, x, y, z);
+      }
+      posAttr.needsUpdate = true;
+    }
+
+    if (this.floodMesh) {
+      this.floodMesh.position.y = this.floodBaseY + Math.sin(this.clock * 1.8) * 0.015;
     }
   }
 
@@ -450,6 +655,10 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
   private rebuildScene(): void {
     const THREE = this.THREE;
     if (!THREE || !this.worldGroup || !this.parcel) return;
+
+    this.particlePoints = undefined;
+    this.particleVelocities = [];
+    this.floodMesh = undefined;
     this.disposeGroup(this.worldGroup);
 
     const bbox = this.parcel.boundingBox;
@@ -459,7 +668,7 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
     const widthX = aspect >= 1 ? this.worldSpan : this.worldSpan * aspect;
     const depthZ = aspect >= 1 ? this.worldSpan / aspect : this.worldSpan;
 
-    const gridSize = this.terrain?.gridSize && this.terrain.gridSize >= 2 ? this.terrain.gridSize : 8;
+    const gridSize = this.terrain?.gridSize && this.terrain.gridSize >= 2 ? this.terrain.gridSize : 6;
     const rawGrid = this.terrain?.elevationGrid?.length === gridSize * gridSize
       ? this.terrain.elevationGrid
       : this.buildFlatFallbackGrid(gridSize);
@@ -471,10 +680,10 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
     const maxReliefHeight = Math.min(1.8, Math.max(0.22, (slopePct / 20) * 1.45));
 
     const toLocal = (lat: number, lon: number) => {
-      const u = (lon - bbox.minLon) / lonSpan; // 0..1 west->east
-      const v = (lat - bbox.minLat) / latSpan; // 0..1 south->north
+      const u = (lon - bbox.minLon) / lonSpan;
+      const v = (lat - bbox.minLat) / latSpan;
       const x = (u - 0.5) * widthX;
-      const z = (0.5 - v) * depthZ; // north at -Z
+      const z = (0.5 - v) * depthZ;
       return { u, v, x, z };
     };
 
@@ -511,7 +720,11 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
 
     const baseTerrainColor = this.getScenarioSoilColor();
     const outsideColor = new THREE.Color('#94a3b8');
+    const landslideDangerColor = new THREE.Color(this.viewMode === 'monoculture' ? '#dc2626' : '#eab308');
     const poly = this.parcel.coordinates;
+
+    let minParcelY = Infinity;
+    let maxParcelY = -Infinity;
 
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i);
@@ -525,8 +738,24 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
       const lon = bbox.minLon + u * lonSpan;
       const inside = this.isPointInPolygon(lat, lon, poly);
 
+      if (inside) {
+        if (y < minParcelY) minParcelY = y;
+        if (y > maxParcelY) maxParcelY = y;
+      }
+
       const shade = 0.85 + 0.28 * ((y - 0.25) / Math.max(0.2, maxReliefHeight));
-      const c = inside ? baseTerrainColor.clone().multiplyScalar(shade) : outsideColor.clone().multiplyScalar(shade * 0.92);
+      let c = inside ? baseTerrainColor.clone().multiplyScalar(shade) : outsideColor.clone().multiplyScalar(shade * 0.92);
+
+      // Highlight steep landslide-prone zones when simulating LANDSLIDE
+      if (inside && this.hazardMode === 'LANDSLIDE') {
+        const du = 0.04;
+        const gx = (sampleHeight(u + du, v) - sampleHeight(u - du, v)) / (2 * du);
+        const gy = (sampleHeight(u, v + du) - sampleHeight(u, v - du)) / (2 * du);
+        const localSteepness = Math.min(1, Math.sqrt(gx * gx + gy * gy) / 1.4);
+        const blendFactor = this.viewMode === 'monoculture' ? localSteepness * 0.88 : localSteepness * 0.45;
+        c = c.lerp(landslideDangerColor, blendFactor);
+      }
+
       colors[i * 3] = c.r;
       colors[i * 3 + 1] = c.g;
       colors[i * 3 + 2] = c.b;
@@ -537,14 +766,14 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
 
     const terrainMat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.88,
-      metalness: 0.04
+      roughness: this.hazardMode === 'FLOOD' || this.hazardMode === 'LANDSLIDE' ? 0.65 : 0.88,
+      metalness: 0.05
     });
     const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
     terrainMesh.receiveShadow = true;
     this.worldGroup.add(terrainMesh);
 
-    // 2. Soil Slab Base (dark earth pedestal underneath)
+    // 2. Soil Slab Base
     const baseGeo = new THREE.BoxGeometry(widthX, 0.26, depthZ);
     const baseMat = new THREE.MeshStandardMaterial({ color: '#5c4033', roughness: 0.95 });
     const baseMesh = new THREE.Mesh(baseGeo, baseMat);
@@ -559,13 +788,13 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
         const y = sampleHeight(u, v) + 0.045;
         linePts.push(new THREE.Vector3(x, y, z));
       }
-      // Close ring
       const first = poly[0];
       const fLocal = toLocal(first.latitude, first.longitude);
       linePts.push(new THREE.Vector3(fLocal.x, sampleHeight(fLocal.u, fLocal.v) + 0.045, fLocal.z));
 
       const lineGeo = new THREE.BufferGeometry().setFromPoints(linePts);
-      const lineMat = new THREE.LineBasicMaterial({ color: '#10b981', linewidth: 2 });
+      const borderHex = this.hazardMode === 'LANDSLIDE' ? '#f97316' : '#10b981';
+      const lineMat = new THREE.LineBasicMaterial({ color: borderHex, linewidth: 2 });
       const borderLine = new THREE.Line(lineGeo, lineMat);
       this.worldGroup.add(borderLine);
     }
@@ -573,10 +802,95 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
     // 4. Stylized 3D Crops inside the parcel polygon
     this.addCropsInsideParcel(poly, bbox, latSpan, lonSpan, toLocal, sampleHeight);
 
-    // 5. Water Runoff Arrows if terrain has noticeable slope (>= 5%)
+    // 5. Flood Basin Overlay (when FLOOD mode is active)
+    if (this.hazardMode === 'FLOOD' && Number.isFinite(minParcelY) && Number.isFinite(maxParcelY)) {
+      this.addFloodPlane(widthX, depthZ, minParcelY, maxParcelY);
+    }
+
+    // 6. Downhill Landslide/Runoff Particles (when LANDSLIDE mode is active)
+    if (this.hazardMode === 'LANDSLIDE') {
+      this.addLandslideParticles(poly, bbox, latSpan, lonSpan, toLocal, sampleHeight);
+    }
+
+    // 7. Water Runoff Arrow if terrain has noticeable slope (>= 5%)
     if (slopePct >= 5) {
       this.addRunoffArrows(rawGrid, gridSize, widthX, depthZ, sampleHeight);
     }
+  }
+
+  private addFloodPlane(widthX: number, depthZ: number, minParcelY: number, maxParcelY: number): void {
+    const THREE = this.THREE;
+    if (!THREE || !this.worldGroup) return;
+
+    this.floodBaseY = minParcelY + Math.max(0.12, (maxParcelY - minParcelY) * 0.36);
+    const waterGeo = new THREE.PlaneGeometry(widthX * 0.96, depthZ * 0.96);
+    waterGeo.rotateX(-Math.PI / 2);
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: '#0284c7',
+      transparent: true,
+      opacity: 0.56,
+      roughness: 0.15,
+      metalness: 0.25
+    });
+    this.floodMesh = new THREE.Mesh(waterGeo, waterMat);
+    this.floodMesh.position.y = this.floodBaseY;
+    this.worldGroup.add(this.floodMesh);
+  }
+
+  private addLandslideParticles(
+    poly: { latitude: number; longitude: number }[],
+    bbox: { minLat: number; maxLat: number; minLon: number; maxLon: number },
+    latSpan: number,
+    lonSpan: number,
+    toLocal: (lat: number, lon: number) => { u: number; v: number; x: number; z: number },
+    sampleHeight: (u: number, v: number) => number
+  ): void {
+    const THREE = this.THREE;
+    if (!THREE || !this.worldGroup || poly.length < 3) return;
+
+    const coords: number[] = [];
+    const step = 9;
+    const speedScale = this.viewMode === 'monoculture' ? 0.022 : 0.011;
+
+    for (let r = 1; r < step; r++) {
+      for (let c = 1; c < step; c++) {
+        const u = c / step;
+        const v = r / step;
+        const lat = bbox.minLat + v * latSpan;
+        const lon = bbox.minLon + u * lonSpan;
+        if (!this.isPointInPolygon(lat, lon, poly)) continue;
+
+        const { x, z } = toLocal(lat, lon);
+        const y = sampleHeight(u, v) + 0.07;
+
+        const du = 0.04;
+        const dhdu = (sampleHeight(u + du, v) - sampleHeight(u - du, v)) / (2 * du);
+        const dhdv = (sampleHeight(u, v + du) - sampleHeight(u, v - du)) / (2 * du);
+
+        // Downhill direction: -gradient in (u -> +x, v -> -z)
+        const vx = -dhdu * speedScale;
+        const vz = dhdv * speedScale;
+        const vy = -0.008;
+
+        coords.push(x, y, z);
+        this.particleVelocities.push({ vx, vy, vz, startX: x, startY: y, startZ: z });
+      }
+    }
+
+    if (coords.length === 0) return;
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(coords, 3));
+
+    const mat = new THREE.PointsMaterial({
+      color: this.viewMode === 'monoculture' ? '#b45309' : '#38bdf8',
+      size: this.viewMode === 'monoculture' ? 0.14 : 0.1,
+      transparent: true,
+      opacity: 0.9
+    });
+
+    this.particlePoints = new THREE.Points(geo, mat);
+    this.worldGroup.add(this.particlePoints);
   }
 
   private addCropsInsideParcel(
@@ -614,7 +928,6 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
 
         if (!this.isPointInPolygon(lat, lon, poly)) continue;
 
-        // Skip some plants if monoculture under severe stress
         if (this.viewMode === 'monoculture' && healthFactor < 0.65 && (r + c) % 3 === 0) {
           continue;
         }
@@ -641,7 +954,6 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
           bush.castShadow = true;
           plant.add(bush);
         } else {
-          // Ground cover / low broadleaf
           const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.07 * scaleH, 7), leafMat);
           pad.position.y = 0.035 * scaleH;
           pad.castShadow = true;
@@ -666,7 +978,6 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
     const THREE = this.THREE;
     if (!THREE || !this.worldGroup) return;
 
-    // Find general downhill direction from grid corners
     let minIdx = 0;
     let maxIdx = 0;
     for (let i = 1; i < grid.length; i++) {
@@ -703,7 +1014,7 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
       dir.normalize(),
       start.lerp(end, 0.25),
       Math.min(2.2, len * 0.5),
-      0x0284c7,
+      this.hazardMode === 'LANDSLIDE' ? 0xf97316 : 0x0284c7,
       0.28,
       0.16
     );
@@ -712,12 +1023,20 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   private getScenarioSoilColor(): THREE.Color {
     const THREE = this.THREE!;
-    if (this.scenarioCode === 'DROUGHT') return new THREE.Color('#b5894c');
+    if (this.hazardMode === 'DROUGHT_HEAT' || this.scenarioCode === 'DROUGHT') return new THREE.Color('#b5894c');
     if (this.scenarioCode === 'HEATWAVE') return new THREE.Color('#b96d3b');
+    if (this.hazardMode === 'LANDSLIDE') return new THREE.Color('#6b5b3e');
+    if (this.hazardMode === 'FLOOD') return new THREE.Color('#3b6e5c');
     return new THREE.Color('#4d7c4f');
   }
 
   private getHealthFactor(): number {
+    if (this.hazardMode === 'DROUGHT_HEAT') {
+      return this.viewMode === 'monoculture' ? 0.42 : 0.78;
+    }
+    if (this.hazardMode === 'LANDSLIDE') {
+      return this.viewMode === 'monoculture' ? 0.55 : 0.88;
+    }
     if (this.activeScenario) {
       const pct = this.viewMode === 'monoculture'
         ? this.activeScenario.monocultureYieldStabilityPct
