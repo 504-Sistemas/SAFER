@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Safer.Api/Safer.Api.csproj" />
+  <Project Path="Safer.Tests/Safer.Tests.csproj" />
+</Solution>

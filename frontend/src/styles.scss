@@ -1,0 +1,39 @@
+:root {
+  /* Space Apps Starter - Tema "Tierra" (tokens.json) */
+  --bg-page: #F7F8F4;
+  --bg-card: #FFFFFF;
+  --surface-raised: #EEF1EA;
+  --border: #D5DBD0;
+  --text-main: #14211B;
+  --text-muted: #4E5D55;
+  --accent: #1F6F5C;
+  --accent-light: #E6F2EE;
+  --highlight: #C2410C;
+  --nasa-blue: #0B3D91;
+  --nasa-blue-light: #EAF1FB;
+  --chart-rain: #2563EB;
+  --risk-low: #15803D;
+  --risk-medium: #A16207;
+  --risk-high: #B91C1C;
+  --radius-md: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Finca2.kml</name>
+	<StyleMap id="m_ylw-pushpin">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#s_ylw-pushpin</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#s_ylw-pushpin_hl</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Style id="s_ylw-pushpin">
+		<IconStyle>
+			<scale>1.1</scale>
+			<Icon>
+				<href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+			</Icon>
+			<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+		</IconStyle>
+		<PolyStyle>
+			<color>33ffffff</color>
+		</PolyStyle>
+	</Style>
+	<Style id="s_ylw-pushpin_hl">
+		<IconStyle>
+			<scale>1.3</scale>
+			<Icon>
+				<href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+			</Icon>
+			<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+		</IconStyle>
+		<PolyStyle>
+			<color>33ffffff</color>
+		</PolyStyle>
+	</Style>
+	<Placemark>
+		<name>Finca2</name>
+		<styleUrl>#m_ylw-pushpin</styleUrl>
+		<Polygon>
+			<tessellate>1</tessellate>
+			<outerBoundaryIs>
+				<LinearRing>
+					<coordinates>
+						-87.55139796312386,14.6338951584033,0 -87.553342274907,14.63420130568982,0 -87.55675774378805,14.63453389796399,0 -87.56187005213748,14.6353260454093,0 -87.5636107388661,14.63390878589035,0 -87.56485916883787,14.63151200329707,0 -87.564583727868,14.62579591383575,0 -87.5631872544561,14.62349990657786,0 -87.56177813489379,14.62330037932855,0 -87.56024729335743,14.62301267388069,0 -87.55756370210381,14.62259687251219,0 -87.55473461279875,14.61908467540749,0 -87.55122768328847,14.61574514743925,0 -87.54626401786281,14.6177158564126,0 -87.54338408955218,14.61951647955956,0 -87.54064659333952,14.62256206238179,0 -87.5416876238952,14.62343943165868,0 -87.54226541186671,14.62564952256365,0 -87.54148886598651,14.62745635368148,0 -87.54189748413917,14.62900462139232,0 -87.54185767465273,14.630262901105,0 -87.54277488350179,14.63000455095622,0 -87.54466908581469,14.63036356953153,0 -87.54986542869085,14.63140382913631,0 -87.55139796312386,14.6338951584033,0 
+					</coordinates>
+				</LinearRing>
+			</outerBoundaryIs>
+		</Polygon>
+		<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.7.1327"></atom:link>
+	</Placemark>
+</Document>
+</kml>

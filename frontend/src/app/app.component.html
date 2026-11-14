@@ -1,0 +1,533 @@
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <span class="badge-nasa">DATOS SATELITALES DE LA NASA</span>
+      <h1>SAFER · Asistente de Siembra y Rotación para tu Finca</h1>
+    </div>
+
+    <div class="sample-actions">
+      @for (sample of sampleFiles; track sample) {
+        <button
+          type="button"
+          class="btn-sample"
+          [disabled]="loading"
+          [class.active]="selectedSample === sample"
+          (click)="loadSample(sample)">
+          {{ sample }}
+        </button>
+      }
+      <label class="btn-upload">
+        Subir .KML
+        <input type="file" accept=".kml" (change)="onKmlFileSelected($event)" hidden />
+      </label>
+    </div>
+  </header>
+
+  @if (errorMessage) {
+    <div class="alert-error">{{ errorMessage }}</div>
+  }
+
+  <main class="main-grid">
+    <!-- LEFT COLUMN: Map, Soil & Farmer Priorities -->
+    <section class="left-col">
+      <div class="card">
+        <div class="card-header">
+          <h2>1. Tu Finca o Terreno</h2>
+          @if (parcel) {
+            <span class="pill-area">{{ parcel.name }} · {{ parcel.areaHectares }} ha</span>
+          }
+        </div>
+
+        <app-parcel-map [parcel]="parcel" (drawnGeoJson)="onDrawnGeoJson($event)"></app-parcel-map>
+
+        @if (parcel) {
+          <div class="parcel-meta">
+            <span><strong>Ubicación:</strong> {{ parcel.centroid.latitude }}, {{ parcel.centroid.longitude }}</span>
+            <span><strong>Archivo:</strong> {{ parcel.sourceFormat }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>2. Tu Tierra y Cultivo Actual</h2>
+          <label class="toggle-inline">
+            <input type="checkbox" [(ngModel)]="useSoilOverrides" />
+            Editar datos de mi tierra
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>¿Qué siembras normalmente aquí?</label>
+          <select [(ngModel)]="baselineCropId">
+            @for (crop of crops; track crop.id) {
+              <option [value]="crop.id">{{ crop.name }}</option>
+            }
+          </select>
+        </div>
+
+        @if (useSoilOverrides) {
+          <div class="soil-grid">
+            <div class="form-row">
+              <label>Tipo de tierra</label>
+              <select [(ngModel)]="soilOverrides.textureClass">
+                <option value="Franco">Tierra suelta (Franco)</option>
+                <option value="Franco Arcilloso">Mezcla tierra y barro</option>
+                <option value="Franco Arenoso">Tierra arenosa</option>
+                <option value="Arcilloso">Tierra barrosa / pesada</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Acidez de la tierra (pH)</label>
+              <input type="number" step="0.1" min="4" max="9" [(ngModel)]="soilOverrides.ph" />
+            </div>
+            <div class="form-row">
+              <label>Abono natural en tierra (%)</label>
+              <input type="number" step="0.1" min="0.2" max="8" [(ngModel)]="soilOverrides.organicCarbonPct" />
+            </div>
+            <div class="form-row">
+              <label>¿Cómo filtra el agua?</label>
+              <select [(ngModel)]="soilOverrides.drainage">
+                <option value="Buen drenaje">Bueno (no se encharca)</option>
+                <option value="Drenaje normal">Normal</option>
+                <option value="Se encharca fácil">Se encharca fácil</option>
+              </select>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>3. ¿Qué es lo más importante para ti?</h2>
+        </div>
+
+        <div class="sliders">
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>Ahorrar agua</span>
+              <strong>{{ priorities.waterConservation }}%</strong>
+            </div>
+            <input type="range" min="0" max="100" [(ngModel)]="priorities.waterConservation" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>Cuidar y abonar la tierra</span>
+              <strong>{{ priorities.soilHealth }}%</strong>
+            </div>
+            <input type="range" min="0" max="100" [(ngModel)]="priorities.soilHealth" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>Evitar plagas sin tanto químico</span>
+              <strong>{{ priorities.pestControl }}%</strong>
+            </div>
+            <input type="range" min="0" max="100" [(ngModel)]="priorities.pestControl" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>Cuidar tus ganancias</span>
+              <strong>{{ priorities.economicStability }}%</strong>
+            </div>
+            <input type="range" min="0" max="100" [(ngModel)]="priorities.economicStability" />
+          </div>
+
+          <div class="slider-item">
+            <div class="slider-label">
+              <span>Proteger la cosecha del clima extremo</span>
+              <strong>{{ priorities.climateResilience }}%</strong>
+            </div>
+            <input type="range" min="0" max="100" [(ngModel)]="priorities.climateResilience" />
+          </div>
+        </div>
+
+        <button type="button" class="btn-primary" [disabled]="loading || !parcel" (click)="runAnalysis()">
+          {{ loading ? 'Consultando clima y satélites...' : 'Analizar mi Finca y Recomendar Siembras' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: NASA Diagnostics, Top 3 Rotations & What-If Simulator -->
+    <section class="right-col" [class.is-loading]="loading">
+      @if (loading) {
+        <div class="loading-banner" role="status" aria-live="polite">
+          <div class="spinner"></div>
+          <div>
+            <strong>Cargando datos satelitales NASA para {{ parcel?.name || 'tu finca' }}...</strong>
+            <small>Consultando precipitación (NASA POWER), escenas Sentinel-2, suelo y riesgo climático.</small>
+          </div>
+        </div>
+      }
+
+      @if (analysisResult; as res) {
+        <!-- NASA Earth Observations -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Cómo está el Clima y la Tierra de tu Finca</h2>
+            <span class="badge-live" [class.offline]="!res.earthObservations.climate.isLiveApi">
+              {{ res.earthObservations.climate.isLiveApi ? 'Datos NASA actualizados' : 'Datos de respaldo' }}
+            </span>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi">
+              <span class="kpi-label">Lluvia y Agua del Campo</span>
+              <strong>{{ res.earthObservations.climate.annualPrecipitationMm }} mm</strong>
+              <small>
+                Se evapora: {{ res.earthObservations.climate.annualEt0Mm ?? 0 }} mm ·
+                {{ (res.earthObservations.climate.annualWaterBalanceMm ?? 0) >= 0 ? 'Sobra' : 'Falta' }}:
+                {{ res.earthObservations.climate.annualWaterBalanceMm ?? 0 }} mm
+              </small>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Temperatura del Lugar</span>
+              <strong>{{ res.earthObservations.climate.meanTemperatureC }}°C</strong>
+              <small>Días más calurosos hasta {{ res.earthObservations.climate.maxTemperatureC }}°C</small>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">¿Puede faltar agua?</span>
+              <strong
+                class="risk-val"
+                [class.risk-low]="res.earthObservations.climate.waterDeficitRisk === 'Riesgo Bajo' || res.earthObservations.climate.waterDeficitRisk === 'Low'"
+                [class.risk-medium]="res.earthObservations.climate.waterDeficitRisk === 'Riesgo Medio' || res.earthObservations.climate.waterDeficitRisk === 'Moderate'"
+                [class.risk-high]="res.earthObservations.climate.waterDeficitRisk === 'Riesgo Alto' || res.earthObservations.climate.waterDeficitRisk === 'High'">
+                {{ res.earthObservations.climate.waterDeficitRisk }}
+              </strong>
+              <small>Verdor de plantas: {{ (res.earthObservations.estimatedNdviBaseline * 100) | number:'1.0-0' }}%</small>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Tu Tierra ({{ res.soil.textureClass }})</span>
+              <strong>Acidez (pH) {{ res.soil.ph }}</strong>
+              <small>Abono natural: {{ res.soil.organicCarbonPct }}% · {{ res.soil.drainage }}</small>
+            </div>
+          </div>
+
+          <!-- Recent 30-Day Anomaly + Terrain Summary -->
+          @if (res.earthObservations.recentAnomaly; as anom) {
+            <div class="anomaly-strip">
+              <span class="anomaly-badge">{{ anom.statusLabel }}</span>
+              <span>{{ anom.summaryText }}</span>
+            </div>
+          }
+
+          @if (res.earthObservations.terrain; as terr) {
+            <div class="terrain-strip">
+              <div>
+                <strong>Altura e Inclinación de tu Terreno:</strong>
+                {{ terr.meanElevationM }} metros de altura · Inclinación ~{{ terr.estimatedSlopePct }}% · Riesgo de deslave:
+                <strong
+                  [class.risk-low]="terr.erosionRisk === 'Bajo'"
+                  [class.risk-medium]="terr.erosionRisk === 'Moderado'"
+                  [class.risk-high]="terr.erosionRisk === 'Alto'">
+                  {{ terr.erosionRisk }}
+                </strong>
+              </div>
+              <small>{{ terr.terrainNote }}</small>
+            </div>
+          }
+
+          <!-- Monthly Precipitation Interactive Bar Chart -->
+          <div class="chart-section">
+            <div class="chart-header-row">
+              <div>
+                <h3>¿Cuándo llueve más en tu finca?</h3>
+                <span class="chart-region-tag">
+                  Datos de tu zona: <strong>{{ res.parcel.name }}</strong>
+                  ({{ res.earthObservations.climate.latitude | number:'1.4-4' }}°, {{ res.earthObservations.climate.longitude | number:'1.4-4' }}°)
+                </span>
+              </div>
+              <div class="year-picker">
+                <label for="precipYear">Año:</label>
+                <select id="precipYear" [(ngModel)]="selectedPrecipYear" (change)="onPrecipYearChange()">
+                  <option value="CLIM">Promedio de varios años</option>
+                  @for (yr of availableYears; track yr) {
+                    <option [ngValue]="yr">{{ yr }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <p class="chart-hint">Haz clic en cualquier mes para ver en qué días llovió.</p>
+
+            <div class="bar-chart">
+              @for (m of displayedMonthlyProfile; track m.month) {
+                <button
+                  type="button"
+                  class="bar-col"
+                  [class.selected]="selectedMonthNumber === m.month"
+                  (click)="selectMonthForDaily(m.month)"
+                  [title]="m.monthName + ': ' + m.precipitationMm + ' mm | ' + m.tempMeanC + '°C (Clic para detalle diario)'">
+                  <div class="bar-value">{{ m.precipitationMm | number:'1.0-0' }}</div>
+                  <div class="bar-track">
+                    <div class="bar-fill" [style.height.%]="(m.precipitationMm / getMaxMonthlyPrecip()) * 100"></div>
+                  </div>
+                  <div class="bar-label">{{ m.monthName }}</div>
+                </button>
+              }
+            </div>
+
+            @if (loadingDaily) {
+              <div class="daily-loading">Cargando detalle diario de NASA POWER...</div>
+            }
+
+            @if (selectedMonthDetail; as detail) {
+              <div class="daily-panel">
+                <div class="daily-header">
+                  <div>
+                    <strong>{{ detail.monthName }} {{ detail.year }}</strong>
+                    <span class="daily-source"> · {{ detail.source }}</span>
+                  </div>
+                  <div class="daily-stats">
+                    <span class="stat-pill">Total: <strong>{{ detail.totalPrecipitationMm }} mm</strong></span>
+                    <span class="stat-pill rain">Días con lluvia: <strong>{{ detail.rainyDaysCount }}</strong> / {{ detail.days.length }}</span>
+                  </div>
+                </div>
+
+                <div class="daily-grid">
+                  @for (day of detail.days; track day.dayOfMonth) {
+                    <div
+                      class="day-cell"
+                      [class.rainy]="day.precipitationMm >= 0.5"
+                      [class.heavy]="day.precipitationMm >= 15"
+                      [title]="day.date + ': ' + day.precipitationMm + ' mm | ' + day.tempMeanC + '°C'">
+                      <span class="day-num">{{ day.dayOfMonth }}</span>
+                      <span class="day-mm">{{ day.precipitationMm >= 0.1 ? (day.precipitationMm | number:'1.1-1') + ' mm' : '—' }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Sentinel-2 HLS Scenes -->
+          <div class="sentinel-box" hidden>
+            <div class="sentinel-header">
+              <strong>Fotos Satelitales de tu Zona (Satélite Sentinel NASA)</strong>
+              <span class="sentinel-status">{{ res.earthObservations.recentSentinelScenes.length }} fotos disponibles</span>
+            </div>
+            @if (res.earthObservations.recentSentinelScenes.length > 0) {
+              <div class="scene-list">
+                @for (scene of res.earthObservations.recentSentinelScenes; track scene.sceneId) {
+                  <div class="scene-pill" [title]="scene.sceneId">
+                    <span class="scene-id">{{ scene.acquiredAt | date:'dd/MM/yyyy' }}</span>
+                    <span>Nubes: {{ scene.cloudCoverPct ?? 'N/D' }}%</span>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="scene-empty">Sin fotos recientes despejadas; el análisis usa los datos climáticos de la NASA.</p>
+            }
+
+            @if (res.earthObservations.recentRadarScenes?.length) {
+              <div class="radar-subsection">
+                <strong>Respaldo de Radar (funciona aunque haya nubes):</strong>
+                <div class="scene-list">
+                  @for (r of res.earthObservations.recentRadarScenes!; track r.sceneId) {
+                    <div class="scene-pill radar" [title]="r.sceneId">
+                      <span class="scene-id">Radar Satelital</span>
+                      <span>{{ r.acquiredAt | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- NASA EONET Extreme Events -->
+          <div class="eonet-box">
+            <div class="sentinel-header">
+              <strong>Alertas Climáticas Cercanas (últimos 6 meses)</strong>
+              <span class="sentinel-status">
+                {{ res.earthObservations.eonetQueryLive ? 'Monitoreo Satelital NASA' : 'Sin conexión de alertas' }}
+              </span>
+            </div>
+            @if (res.earthObservations.regionalExtremeEvents.length > 0) {
+              <div class="eonet-list">
+                @for (ev of res.earthObservations.regionalExtremeEvents; track ev.id) {
+                  <div class="eonet-item">
+                    <span class="eonet-cat">{{ ev.category }}</span>
+                    <span class="eonet-title">{{ ev.title }}</span>
+                    <span class="eonet-meta">a {{ ev.distanceKm }} km de tu finca · {{ ev.date | date:'dd/MM/yyyy' }} · {{ ev.status }}</span>
+                  </div>
+                }
+              </div>
+              <p class="eonet-tip">
+                Consejo: si hubo lluvias fuertes o inundaciones cerca, prioriza rotaciones con buen drenaje y cultivos de cobertura para proteger tu suelo.
+              </p>
+            } @else {
+              <p class="scene-empty">Sin eventos extremos reportados en un radio de 50 km alrededor de tu finca en los últimos 6 meses.</p>
+            }
+          </div>
+
+          <!-- Pest & Disease Climate Risk Assessment -->
+          @if (res.earthObservations.pestRisk; as pest) {
+            <div class="pest-box">
+              <div class="sentinel-header">
+                <strong>Riesgo de Plagas y Enfermedades (Clima NASA)</strong>
+                <span class="pest-reduction">Rotación #1 reduce riesgo ~{{ pest.rotationRiskReductionPct }}%</span>
+              </div>
+
+              <div class="pest-grid">
+                <div class="pest-card">
+                  <span>Hongos foliares (humedad y lluvia)</span>
+                  <strong
+                    [class.risk-low]="pest.fungalDiseaseRisk === 'Bajo'"
+                    [class.risk-medium]="pest.fungalDiseaseRisk === 'Moderado'"
+                    [class.risk-high]="pest.fungalDiseaseRisk === 'Alto'">
+                    {{ pest.fungalDiseaseRisk }} ({{ pest.fungalRiskScore }}/100)
+                  </strong>
+                </div>
+                <div class="pest-card">
+                  <span>Insectos / plagas de calor</span>
+                  <strong
+                    [class.risk-low]="pest.insectPestRisk === 'Bajo'"
+                    [class.risk-medium]="pest.insectPestRisk === 'Moderado'"
+                    [class.risk-high]="pest.insectPestRisk === 'Alto'">
+                    {{ pest.insectPestRisk }} ({{ pest.insectRiskScore }}/100)
+                  </strong>
+                </div>
+              </div>
+
+              @if (pest.highRiskMonths.length > 0) {
+                <div class="pest-months">
+                  <span>Meses a vigilar en campo:</span>
+                  @for (m of pest.highRiskMonths; track m) {
+                    <span class="month-tag">{{ m }}</span>
+                  }
+                </div>
+              }
+
+              <p class="pest-note">{{ pest.monocultureRiskNote }}</p>
+              <p class="pest-disclaimer">{{ pest.scientificDisclaimer }}</p>
+            </div>
+          }
+        </div>
+
+        <!-- Top 3 Rotation Recommendations -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Planes de Siembra Recomendados (Top 3)</h2>
+            <span class="chart-hint">Haz clic en un plan para compararlo abajo</span>
+          </div>
+
+          <div class="recommendations-list">
+            @for (rec of res.recommendations; track rec.rank) {
+              <div
+                class="rec-card selectable"
+                role="button"
+                tabindex="0"
+                [class.top-pick]="rec.rank === 1"
+                [class.selected-rot]="rec.rank === selectedRotationRank"
+                (click)="selectRotation(rec.rank)"
+                (keydown.enter)="selectRotation(rec.rank)">
+                <div class="rec-head">
+                  <div>
+                    <span class="rank-badge">#{{ rec.rank }}</span>
+                    <strong>{{ rec.strategyName }}</strong>
+                  </div>
+                  <div class="rec-head-right">
+                    <span class="select-pill" [class.active]="rec.rank === selectedRotationRank">
+                      {{ rec.rank === selectedRotationRank ? 'Comparando' : 'Comparar' }}
+                    </span>
+                    <span class="score-badge">{{ rec.overallScore }} / 100</span>
+                  </div>
+                </div>
+
+                <p class="rec-summary">{{ rec.summary }}</p>
+
+                <div class="rec-metrics">
+                  <span>Ahorro de agua: <strong>{{ rec.waterEfficiencyScore }}</strong></span>
+                  <span>Fuerza de tierra: <strong>{{ rec.soilHealthScore }}</strong></span>
+                  <span>Control plagas: <strong>{{ rec.pestBreakScore }}</strong></span>
+                  <span>Resistencia clima: <strong>{{ rec.climateResilienceScore }}</strong></span>
+                </div>
+
+                <div class="cycles-timeline">
+                  @for (step of rec.cycles; track step.cycleNumber) {
+                    <div class="cycle-step">
+                      <div class="cycle-season">{{ step.seasonLabel }}</div>
+                      <div class="cycle-crop">{{ step.crop.name }}</div>
+                      <div class="cycle-rationale">{{ step.rationale }}</div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- What-If Scenario Simulator (Option B) -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Comparación: Sembrar siempre lo mismo ({{ res.baselineCropName }}) vs. Plan #{{ selectedRotation?.rank ?? 1 }}</h2>
+              @if (selectedRotation) {
+                <span class="chart-region-tag">{{ selectedRotation.strategyName }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="scenario-tabs">
+            @for (sc of (selectedRotation?.whatIfScenarios ?? res.whatIfScenarios); track sc.scenarioCode) {
+              <button
+                type="button"
+                class="tab-btn"
+                [class.active]="selectedScenarioCode === sc.scenarioCode"
+                (click)="selectedScenarioCode = sc.scenarioCode">
+                {{ sc.scenarioName }}
+              </button>
+            }
+          </div>
+
+          @if (activeScenario; as sc) {
+            <div class="scenario-body">
+              <div class="comparison-row">
+                <div class="comp-label">Seguridad de tu Cosecha</div>
+                <div class="comp-bars">
+                  <div class="comp-bar-line">
+                    <span>Siempre lo mismo</span>
+                    <div class="track"><div class="fill mono" [style.width.%]="sc.monocultureYieldStabilityPct"></div></div>
+                    <strong>{{ sc.monocultureYieldStabilityPct }}%</strong>
+                  </div>
+                  <div class="comp-bar-line">
+                    <span>Plan #{{ selectedRotation?.rank ?? 1 }}</span>
+                    <div class="track"><div class="fill rot" [style.width.%]="sc.rotationYieldStabilityPct"></div></div>
+                    <strong>{{ sc.rotationYieldStabilityPct }}%</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="comparison-row">
+                <div class="comp-label">Fuerza y Fertilidad de la Tierra</div>
+                <div class="comp-bars">
+                  <div class="comp-bar-line">
+                    <span>Siempre lo mismo</span>
+                    <div class="track"><div class="fill mono" [style.width.%]="sc.monocultureSoilHealthIndex"></div></div>
+                    <strong>{{ sc.monocultureSoilHealthIndex }}</strong>
+                  </div>
+                  <div class="comp-bar-line">
+                    <span>Plan #{{ selectedRotation?.rank ?? 1 }}</span>
+                    <div class="track"><div class="fill rot" [style.width.%]="sc.rotationSoilHealthIndex"></div></div>
+                    <strong>{{ sc.rotationSoilHealthIndex }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="scenario-insight">
+                <span><strong>Ahorro de agua estimado:</strong> {{ sc.waterSavedPct }}% ({{ sc.rotationWaterUseMm }} mm vs {{ sc.monocultureWaterUseMm }} mm)</span>
+                <p>{{ sc.keyInsight }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="card empty-state">
+          <h2>Selecciona o dibuja una parcela para comenzar</h2>
+          <p>Carga <strong>Finca1.kml</strong> o <strong>Finca2.kml</strong> arriba, sube tu propio KML, o dibuja un polígono directamente en el mapa.</p>
+        </div>
+      }
+    </section>
+  </main>
+</div>
