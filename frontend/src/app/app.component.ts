@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SaferApiService } from './services/safer-api.service';
 import { ParcelMapComponent } from './components/parcel-map/parcel-map.component';
+import { FarmTwin3dComponent } from './components/farm-twin-3d/farm-twin-3d.component';
 import {
   CropDefinition,
   DecisionSupportResponseDto,
@@ -16,7 +17,7 @@ import {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, ParcelMapComponent],
+  imports: [CommonModule, FormsModule, ParcelMapComponent, FarmTwin3dComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

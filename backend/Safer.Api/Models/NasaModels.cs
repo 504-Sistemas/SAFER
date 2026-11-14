@@ -132,6 +132,8 @@ public class ParcelTerrainDto
     public double EstimatedSlopePct { get; set; }
     public string ErosionRisk { get; set; } = "Moderado"; // Bajo, Moderado, Alto
     public string TerrainNote { get; set; } = string.Empty;
+    public int GridSize { get; set; } = 8;
+    public List<double> ElevationGrid { get; set; } = [];
 }
 
 public class RecentWeatherAnomalyDto

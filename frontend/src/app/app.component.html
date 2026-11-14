@@ -601,6 +601,17 @@
             </div>
           }
         </div>
+
+        <!-- 3D Digital Twin (Three.js + SRTM DEM) -->
+        <app-farm-twin-3d
+          [parcel]="res.parcel"
+          [terrain]="res.earthObservations.terrain"
+          [soil]="res.soil"
+          [selectedRotation]="selectedRotation"
+          [baselineCropName]="res.baselineCropName"
+          [scenarioCode]="selectedScenarioCode"
+          [activeScenario]="activeScenario">
+        </app-farm-twin-3d>
       } @else {
         <div class="card empty-state">
           <h2>Selecciona o dibuja una parcela para comenzar</h2>

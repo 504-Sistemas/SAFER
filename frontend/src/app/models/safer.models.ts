@@ -92,6 +92,8 @@ export interface ParcelTerrainDto {
   estimatedSlopePct: number;
   erosionRisk: string;
   terrainNote: string;
+  gridSize?: number;
+  elevationGrid?: number[];
 }
 
 export interface RecentWeatherAnomalyDto {
