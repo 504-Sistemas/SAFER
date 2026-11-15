@@ -492,7 +492,11 @@
                 <div class="crop-flow-compact">
                   @for (step of rec.cycles; track step.cycleNumber; let last = $last) {
                     <span class="crop-flow-pill">
-                      <small>{{ i18n.tr(step.seasonLabel) }}:</small> <strong>{{ i18n.tr(step.crop.name) }}</strong>
+                      <small>{{ i18n.tr(step.seasonLabel) }}:</small>
+                      <strong>{{ i18n.tr(step.crop.name) }}</strong>
+                      @if (step.suggestedWindow) {
+                        <small class="cycle-window-tag">({{ i18n.tr(step.suggestedWindow) }})</small>
+                      }
                     </span>
                     @if (!last) {
                       <span class="crop-flow-arrow">→</span>
@@ -525,10 +529,24 @@
                         <div class="cycle-step">
                           <div class="cycle-season">{{ i18n.tr(step.seasonLabel) }}</div>
                           <div class="cycle-crop">{{ i18n.tr(step.crop.name) }}</div>
+                          @if (step.suggestedWindow) {
+                            <div class="cycle-schedule-meta">
+                              <span><strong>{{ i18n.tr(step.suggestedWindow) }}</strong> · ~{{ step.durationMonths }} {{ i18n.t('meses', 'months') }} ({{ step.crop.cycleDays }} {{ i18n.t('días', 'days') }})</span>
+                            </div>
+                          }
                           <div class="cycle-rationale">{{ step.rationale }}</div>
+                          @if (step.restDaysAfter && step.restAndFertilizationTip) {
+                            <div class="cycle-rest-box">
+                              <strong>{{ i18n.t('Descanso y abonado:', 'Soil rest & fertilization:') }} ~{{ step.restDaysAfter }} {{ i18n.t('días', 'days') }}</strong>
+                              <span>{{ i18n.tr(step.restAndFertilizationTip) }}</span>
+                            </div>
+                          }
                         </div>
                       }
                     </div>
+                    <p class="schedule-disclaimer">
+                      {{ i18n.t('Calendario estimado según el inicio de lluvias NASA POWER de tu finca y el ciclo de cada cultivo.', 'Estimated schedule based on your parcel NASA POWER rainy-season onset and crop cycle length.') }}
+                    </p>
                   </div>
                 }
               </div>

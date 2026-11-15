@@ -176,6 +176,10 @@ export interface RotationCycleStep {
   seasonLabel: string;
   crop: CropDefinition;
   rationale: string;
+  durationMonths?: number;
+  suggestedWindow?: string;
+  restDaysAfter?: number;
+  restAndFertilizationTip?: string;
 }
 
 export interface RotationRecommendationDto {

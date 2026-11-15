@@ -120,13 +120,7 @@ public class RotationEngineService(ICropCatalogService catalogService) : IRotati
         var summary = $"Combina {distinctFamilies} tipos de plantas distintas ({nitrogenText}) y necesita ~{totalWater:F0} mm de agua frente a {climate.AnnualPrecipitationMm:F0} mm de lluvia al año.";
 
         var seasons = new[] { "1ª Siembra (Época de Lluvias)", "2ª Siembra (Postrera)", "3ª Siembra (Época Seca / Cobertura)" };
-        var cycles = seq.Select((crop, idx) => new RotationCycleStep
-        {
-            CycleNumber = idx + 1,
-            SeasonLabel = seasons[idx],
-            Crop = crop,
-            Rationale = BuildStepRationale(crop, idx, climate, soil)
-        }).ToList();
+        var cycles = BuildScheduledCycles(seq, seasons, climate, soil);
 
         return new RotationRecommendationDto
         {
@@ -211,5 +205,60 @@ public class RotationEngineService(ICropCatalogService catalogService) : IRotati
                 KeyInsight = $"Si el calor sube hasta {climate.MaxTemperatureC + 2.0:F1}°C, variar de cultivos evita que toda tu cosecha se pierda al mismo tiempo."
             }
         ];
+    }
+
+    private static List<RotationCycleStep> BuildScheduledCycles(
+        IReadOnlyList<CropDefinition> seq,
+        string[] seasons,
+        NasaPowerClimateDto climate,
+        SoilProfileDto soil)
+    {
+        var monthNames = new[] { "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" };
+        var currentMonth = DetectRainyStartMonth(climate); // 1..12
+        var steps = new List<RotationCycleStep>(seq.Count);
+
+        for (var idx = 0; idx < seq.Count; idx++)
+        {
+            var crop = seq[idx];
+            var durationMonths = Math.Round(crop.CycleDays / 30.0, 1);
+            var spanMonths = Math.Max(2, (int)Math.Round(crop.CycleDays / 30.0));
+            var endMonth = ((currentMonth - 1 + spanMonths - 1) % 12) + 1;
+            var window = $"{monthNames[currentMonth - 1]} – {monthNames[endMonth - 1]}";
+
+            var (restDays, restTip) = crop.Category == "CoverCrop" || crop.NitrogenBalance > 0
+                ? (15, "Reposar ~15 días incorporando el rastrojo verde al suelo para aportar nitrógeno natural antes de la siguiente siembra.")
+                : crop.NitrogenBalance <= -2
+                    ? (30, "Reposar ~30 días: picar rastrojo, aplicar abono orgánico o compost y dejar airear la tierra antes del próximo cultivo.")
+                    : (21, "Reposar ~21 días para incorporar rastrojo, abonar el suelo y preparar la cama de siembra.");
+
+            steps.Add(new RotationCycleStep
+            {
+                CycleNumber = idx + 1,
+                SeasonLabel = seasons[idx],
+                Crop = crop,
+                Rationale = BuildStepRationale(crop, idx, climate, soil),
+                DurationMonths = durationMonths,
+                SuggestedWindow = window,
+                RestDaysAfter = restDays,
+                RestAndFertilizationTip = restTip
+            });
+
+            // Advance to next cycle start month (harvest month + 1 month prep/rest buffer when >= 21 days)
+            currentMonth = ((endMonth - 1 + (restDays >= 21 ? 1 : 0) + 1) % 12) + 1;
+        }
+
+        return steps;
+    }
+
+    private static int DetectRainyStartMonth(NasaPowerClimateDto climate)
+    {
+        if (climate.MonthlyProfile.Count == 0) return 5;
+
+        var ordered = climate.MonthlyProfile.OrderBy(m => m.Month).ToList();
+        var wet = ordered.FirstOrDefault(m => m.PrecipitationMm >= 100 || m.WaterBalanceMm >= 0);
+        if (wet is not null) return Math.Clamp(wet.Month, 1, 12);
+
+        var peak = ordered.OrderByDescending(m => m.PrecipitationMm).First();
+        return Math.Clamp(peak.Month, 1, 12);
     }
 }

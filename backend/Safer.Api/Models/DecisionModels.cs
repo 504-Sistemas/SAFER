@@ -44,6 +44,10 @@ public class RotationCycleStep
     public string SeasonLabel { get; set; } = string.Empty;
     public CropDefinition Crop { get; set; } = new();
     public string Rationale { get; set; } = string.Empty;
+    public double DurationMonths { get; set; }
+    public string SuggestedWindow { get; set; } = string.Empty;
+    public int RestDaysAfter { get; set; }
+    public string RestAndFertilizationTip { get; set; } = string.Empty;
 }
 
 public class RotationRecommendationDto

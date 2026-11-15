@@ -73,6 +73,14 @@ export class I18nService {
     'Evento pasado': 'Past event',
     'Vigente ahora': 'Active now',
 
+    // Soil rest & fertilization tips
+    'Reposar ~15 días incorporando el rastrojo verde al suelo para aportar nitrógeno natural antes de la siguiente siembra.':
+      'Rest ~15 days while incorporating green residue into the soil to add natural nitrogen before the next planting.',
+    'Reposar ~30 días: picar rastrojo, aplicar abono orgánico o compost y dejar airear la tierra antes del próximo cultivo.':
+      'Rest ~30 days: chop residue, apply organic compost/manure, and aerate topsoil before the next crop.',
+    'Reposar ~21 días para incorporar rastrojo, abonar el suelo y preparar la cama de siembra.':
+      'Rest ~21 days to incorporate crop residue, fertilize topsoil, and prepare the seedbed.',
+
     // Months
     'Ene': 'Jan', 'Feb': 'Feb', 'Mar': 'Mar', 'Abr': 'Apr',
     'May': 'May', 'Jun': 'Jun', 'Jul': 'Jul', 'Ago': 'Aug',
