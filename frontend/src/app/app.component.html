@@ -399,9 +399,9 @@
                   <div class="eonet-list">
                     @for (ev of res.earthObservations.regionalExtremeEvents; track ev.id) {
                       <div class="eonet-item">
-                        <span class="eonet-cat">{{ ev.category }}</span>
-                        <span class="eonet-title">{{ ev.title }}</span>
-                        <span class="eonet-meta">{{ ev.distanceKm }} km · {{ ev.date | date:'dd/MM/yyyy' }} · {{ ev.status }}</span>
+                        <span class="eonet-cat">{{ i18n.tr(ev.category) }}</span>
+                        <span class="eonet-title">{{ i18n.tr(ev.title) }}</span>
+                        <span class="eonet-meta">{{ ev.distanceKm }} km · {{ ev.date | date:'dd/MM/yyyy' }} · {{ i18n.tr(ev.status) }}</span>
                       </div>
                     }
                   </div>

@@ -134,7 +134,7 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
             @if (primaryEonetAlert; as alert) {
               <div class="hud-eonet">
                 <span class="pulse-dot"></span>
-                <span><strong>{{ i18n.t('Alerta NASA EONET', 'NASA EONET Alert') }} ({{ alert.distanceKm }} km):</strong> {{ alert.title }}</span>
+                <span><strong>{{ i18n.t('Alerta NASA EONET', 'NASA EONET Alert') }} ({{ alert.distanceKm }} km):</strong> {{ i18n.tr(alert.title) }}</span>
               </div>
             } @else if (recentAnomaly && recentAnomaly.anomalyPct >= 40) {
               <div class="hud-anomaly">

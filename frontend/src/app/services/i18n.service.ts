@@ -53,10 +53,25 @@ export class I18nService {
     'Normal': 'Normal',
     'Más húmedo de lo normal': 'Wetter than normal',
 
-    // EONET categories
+    // EONET categories, titles & statuses
     'Severe Storms': 'Severe Storms',
     'Floods': 'Floods',
     'Wildfires': 'Wildfires',
+    'Inundación en ': 'Flood in ',
+    'Incendio en ': 'Wildfire in ',
+    'Tormenta fuerte ': 'Severe Storm ',
+    'Tormenta tropical ': 'Tropical Storm ',
+    'Huracán ': 'Hurricane ',
+    'Sequía en ': 'Drought in ',
+    'Evento climático en la región': 'Regional climate event',
+    'Inundación': 'Flood',
+    'Incendio': 'Wildfire',
+    'Tormenta fuerte': 'Severe Storm',
+    'Sequía': 'Drought',
+    'Deslizamiento': 'Landslide',
+    'Alerta climática': 'Climate alert',
+    'Evento pasado': 'Past event',
+    'Vigente ahora': 'Active now',
 
     // Months
     'Ene': 'Jan', 'Feb': 'Feb', 'Mar': 'Mar', 'Abr': 'Apr',
