@@ -227,8 +227,20 @@ export class AppComponent implements OnInit {
     });
   }
 
+  closeMonthDaily(): void {
+    this.selectedMonthNumber = null;
+    this.selectedMonthDetail = null;
+    this.loadingDaily = false;
+  }
+
   selectMonthForDaily(month: number): void {
     if (!this.analysisResult) return;
+
+    if (this.selectedMonthNumber === month) {
+      this.closeMonthDaily();
+      return;
+    }
+
     const yearToFetch = this.selectedPrecipYear === 'CLIM' ? 2025 : this.selectedPrecipYear;
     const { latitude, longitude } = this.analysisResult.parcel.centroid;
 
@@ -236,7 +248,9 @@ export class AppComponent implements OnInit {
     this.loadingDaily = true;
     this.api.getMonthlyDailyPrecipitation(latitude, longitude, yearToFetch, month).subscribe({
       next: (daily) => {
-        this.selectedMonthDetail = daily;
+        if (this.selectedMonthNumber === month) {
+          this.selectedMonthDetail = daily;
+        }
         this.loadingDaily = false;
       },
       error: () => {

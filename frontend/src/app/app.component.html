@@ -298,7 +298,7 @@
                   </select>
                 </div>
               </div>
-              <p class="chart-hint">{{ i18n.t('Haz clic en cualquier mes para ver en qué días llovió.', 'Click any month to inspect daily rainfall.') }}</p>
+              <p class="chart-hint">{{ i18n.t('Haz clic en cualquier mes para ver en qué días llovió (clic de nuevo para cerrar).', 'Click any month to inspect daily rainfall (click again to close).') }}</p>
 
               <div class="bar-chart">
                 @for (m of displayedMonthlyProfile; track m.month) {
@@ -331,6 +331,9 @@
                     <div class="daily-stats">
                       <span class="stat-pill">{{ i18n.t('Total:', 'Total:') }} <strong>{{ detail.totalPrecipitationMm }} mm</strong></span>
                       <span class="stat-pill rain">{{ i18n.t('Días con lluvia:', 'Rainy days:') }} <strong>{{ detail.rainyDaysCount }}</strong> / {{ detail.days.length }}</span>
+                      <button type="button" class="btn-link-toggle" (click)="closeMonthDaily()">
+                        {{ i18n.t('Ocultar días', 'Hide days') }}
+                      </button>
                     </div>
                   </div>
 
