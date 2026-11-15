@@ -324,6 +324,12 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
       width: 100%;
       height: 100%;
       display: block;
+      overflow: hidden;
+    }
+    :host ::ng-deep .renderer-host canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
     }
     .hud-overlay {
       position: absolute;
@@ -621,7 +627,8 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   toggleExpand(force?: boolean): void {
     this.isExpanded = force !== undefined ? force : !this.isExpanded;
-    setTimeout(() => this.handleResize(), 30);
+    requestAnimationFrame(() => this.handleResize());
+    setTimeout(() => this.handleResize(), 60);
   }
 
   resetCamera(): void {
@@ -650,7 +657,7 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
       this.camera.position.set(5.4, 4.4, 5.6);
 
       this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      this.renderer.setSize(width, height);
+      this.renderer.setSize(width, height, false);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       this.renderer.shadowMap.enabled = true;
       this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -732,7 +739,7 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
     const h = Math.max(200, el.clientHeight);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(w, h);
+    this.renderer.setSize(w, h, false);
   }
 
   private rebuildScene(): void {
