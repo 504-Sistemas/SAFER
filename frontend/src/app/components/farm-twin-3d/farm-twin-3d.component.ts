@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  HostListener,
   Input,
   OnChanges,
   OnDestroy,
@@ -30,7 +31,10 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="twin-card">
+    @if (isExpanded) {
+      <div class="twin-backdrop" (click)="toggleExpand(false)"></div>
+    }
+    <div class="twin-card" [class.expanded]="isExpanded">
       <div class="twin-header">
         <div>
           <h3>{{ i18n.t('Vista 3D de tu Finca (Gemelo Digital)', '3D Farm View (Digital Twin)') }}</h3>
@@ -59,6 +63,13 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
           </button>
           <button type="button" class="twin-pill reset-btn" (click)="resetCamera()">
             {{ i18n.t('Centrar', 'Reset View') }}
+          </button>
+          <button
+            type="button"
+            class="twin-pill expand-btn"
+            [class.active]="isExpanded"
+            (click)="toggleExpand()">
+            {{ isExpanded ? i18n.t('Contraer', 'Exit Full View') : i18n.t('Expandir 3D', 'Expand 3D') }}
           </button>
         </div>
       </div>
@@ -169,6 +180,12 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
     </div>
   `,
   styles: [`
+    .twin-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.62);
+      z-index: 1990;
+    }
     .twin-card {
       background: #ffffff;
       border: 1px solid #d9e2ec;
@@ -176,6 +193,30 @@ type HazardMode = 'AUTO' | 'LANDSLIDE' | 'FLOOD' | 'DROUGHT_HEAT';
       padding: 14px 16px;
       margin-bottom: 16px;
       box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    }
+    .twin-card.expanded {
+      position: fixed;
+      inset: 18px;
+      z-index: 2000;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.45);
+    }
+    .twin-card.expanded .canvas-wrap {
+      flex: 1;
+      height: auto;
+      min-height: 420px;
+    }
+    .twin-pill.expand-btn {
+      background: #f0fdf4;
+      border-color: #86efac;
+      color: #166534;
+    }
+    .twin-pill.expand-btn.active {
+      background: #1e293b;
+      border-color: #1e293b;
+      color: #ffffff;
     }
     .twin-header {
       display: flex;
@@ -425,6 +466,7 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
   viewMode: 'rotation' | 'monoculture' = 'rotation';
   hazardMode: HazardMode = 'AUTO';
   selectedCycleIndex = 0;
+  isExpanded = false;
   webglError: string | null = null;
 
   private THREE?: typeof THREE;
@@ -568,6 +610,18 @@ export class FarmTwin3dComponent implements AfterViewInit, OnChanges, OnDestroy 
   setCycleIndex(idx: number): void {
     this.selectedCycleIndex = idx;
     this.rebuildScene();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isExpanded) {
+      this.toggleExpand(false);
+    }
+  }
+
+  toggleExpand(force?: boolean): void {
+    this.isExpanded = force !== undefined ? force : !this.isExpanded;
+    setTimeout(() => this.handleResize(), 30);
   }
 
   resetCamera(): void {
